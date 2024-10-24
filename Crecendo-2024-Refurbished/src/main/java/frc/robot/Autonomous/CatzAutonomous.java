@@ -1,9 +1,17 @@
 package frc.robot.Autonomous;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -21,11 +29,15 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotState;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.CatzConstants;
 import frc.robot.RobotContainer;
@@ -38,14 +50,20 @@ import frc.robot.Commands.CharacterizationCmds.FeedForwardCharacterization;
 import frc.robot.Commands.DriveAndRobotOrientationCmds.TrajectoryDriveCmd;
 import frc.robot.Utilities.AllianceFlipUtil;
 import frc.robot.Utilities.AllianceFlipUtil.PathPlannerFlippingState;
+import java.util.HashMap;
 
 public class CatzAutonomous {
+    private final int MAX_QUESTIONS = 5;
+
     private static LoggedDashboardChooser<Command> autoPathChooser = new LoggedDashboardChooser<>("Chosen Autonomous Path");
     private RobotContainer m_container;
     private boolean trajectoriesLoaded = false;
+    private JSONParser parser = new JSONParser();
 
+    private HashMap<String, ModifiableCmd> modifiableCmds = new HashMap<>();
     private File pathsDirectory = new File(Filesystem.getDeployDirectory(), "choreo");
     private File autosDirectory = new File(Filesystem.getDeployDirectory(), "pathplanner/autos");
+    private String lastAutoName = null;
 
     public CatzAutonomous(RobotContainer container) {
         this.m_container = container;
@@ -68,16 +86,59 @@ public class CatzAutonomous {
             container.getCatzDrivetrain()
         );
 
-        NamedCommands.registerCommand("PrintCMD", Commands.print("HI"));
+        HashMap<String, Command> scoringPositions = new HashMap<>();
+        scoringPositions.put("High", new PrintCommand("High"));
+        scoringPositions.put("Mid", new PrintCommand("Mid"));
+        scoringPositions.put("Low", new PrintCommand("Low"));
+        modifiableCmds.put("Score", new ModifiableCmd("Scoring Position?", scoringPositions));
 
+        modifiableCmds.forEach((k, v) -> {
+            NamedCommands.registerCommand(k, v);
+        });
         for(File pathFile : pathsDirectory.listFiles()){
-            String pathName = pathFile.getName().replaceFirst("[.][^.]+$", ""); //to get rid of the extensions trailing the path names
+            //to get rid of the extensions trailing the path names
+            String pathName = pathFile.getName().replaceFirst("[.][^.]+$", ""); 
             PathPlannerPath path = PathPlannerPath.fromChoreoTrajectory(pathName);
             NamedCommands.registerCommand(pathName, new TrajectoryDriveCmd(path, container.getCatzDrivetrain()));
         }
         for (File autoFile: autosDirectory.listFiles()){
             String autoName = autoFile.getName().replaceFirst("[.][^.]+$", "");
-            autoPathChooser.addOption(autoName, new PathPlannerAuto(autoName));
+            autoPathChooser.addDefaultOption(autoName, new PathPlannerAuto(autoName));
+        }
+    }
+
+    public void updateQuestionaire(){
+        try {
+            String autoName = autoPathChooser.get().getName() + ".auto";
+            JSONObject json = (JSONObject) parser.parse(new FileReader(Filesystem.getDeployDirectory()+"/pathplanner/autos/"+autoName));
+
+            if (!autoName.equals(lastAutoName)){
+                lastAutoName = autoName;
+
+                for(int i=1; i<=MAX_QUESTIONS; i++){
+                    String questionName = "Question " + String.valueOf(i);
+                    SmartDashboard.putString(questionName, "");
+                    SmartDashboard.putData(questionName + " Response", new SendableChooser<Command>());
+                }
+
+                //im sorry
+                JSONArray commands = (JSONArray)((JSONObject)(((JSONObject)json.get("command"))).get("data")).get("commands");
+                int questionCounter = 1;
+
+                for(Object o : commands){
+                    String commandName = (String)((JSONObject)((JSONObject) o).get("data")).get("name");
+                    ModifiableCmd modifiableCommand = modifiableCmds.get(commandName);
+
+                    if(modifiableCommand != null){
+                        String questionName = "Question " + String.valueOf(questionCounter);
+                        SmartDashboard.putString(questionName, modifiableCommand.getQuestion());
+                        SmartDashboard.putData(questionName + " Response", modifiableCommand.getChooser());
+                        questionCounter += 1;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

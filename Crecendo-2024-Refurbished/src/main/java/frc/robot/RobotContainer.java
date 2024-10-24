@@ -20,7 +20,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Autonomous.CatzAutonomous;
-import frc.robot.Autonomous.Questionaire;
 import frc.robot.CatzConstants.AllianceColor;
 import frc.robot.CatzConstants.RobotSenario;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.CatzRobotTracker;
@@ -82,7 +81,6 @@ public class RobotContainer {
 
   // Auto Declaration
   private CatzAutonomous auto = new CatzAutonomous(this);
-  private Questionaire questionaire = new Questionaire(this);
 
   public RobotContainer() {
 
@@ -190,10 +188,6 @@ public class RobotContainer {
   //      Subsystem getters
   //
   //---------------------------------------------------------------------------
-  public Questionaire getQuestionaire(){
-    return questionaire;
-  }
-
   public CatzDrivetrain getCatzDrivetrain() {
     return drive;
   }
@@ -220,6 +214,10 @@ public class RobotContainer {
 
   public CatzIntakePivot getCatzIntakePivot() {
     return intakePivot;
+  }
+
+  public CatzAutonomous getCatzAutonomous(){
+    return auto;
   }
 
   public Command getAutonomousCommand() {

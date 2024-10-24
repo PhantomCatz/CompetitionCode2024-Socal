@@ -319,6 +319,7 @@ public class Robot extends LoggedRobot {
         }
       }
     }
+    m_robotContainer.getCatzAutonomous().updateQuestionaire();
   }
 
   @Override
