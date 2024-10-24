@@ -6,7 +6,12 @@
       "/SmartDashboard/Choose Start Position": "String Chooser",
       "/SmartDashboard/Choosen Alliance Color": "String Chooser",
       "/SmartDashboard/Chosen Autonomous Path": "String Chooser",
-      "/SmartDashboard/Field": "Field2d"
+      "/SmartDashboard/Field": "Field2d",
+      "/SmartDashboard/Question 1 Response": "String Chooser",
+      "/SmartDashboard/Question 2 Response": "String Chooser",
+      "/SmartDashboard/Question 3 Response": "String Chooser",
+      "/SmartDashboard/Question 4 Response": "String Chooser",
+      "/SmartDashboard/Question 5 Response": "String Chooser"
     }
   },
   "NetworkTables Info": {

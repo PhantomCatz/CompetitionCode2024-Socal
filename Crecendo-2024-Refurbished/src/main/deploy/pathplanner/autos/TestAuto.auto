@@ -20,7 +20,33 @@
         {
           "type": "named",
           "data": {
-            "name": "Score"
+            "name": "Score1"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Score2"
+                }
+              },
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Score3"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
           }
         }
       ]
