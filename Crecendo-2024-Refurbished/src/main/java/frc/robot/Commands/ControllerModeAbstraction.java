@@ -33,6 +33,13 @@ public class ControllerModeAbstraction {
             ()->isModeSpeaker());
     }
 
+    public static Command robotScoreSubwoofer(RobotContainer container, Supplier<Boolean> override) {
+        return Commands.either(
+            AutomatedSequenceCmds.scoreSpeakerSubwoofer(container, override), 
+            AutomatedSequenceCmds.scoreAmp(container),
+            ()->isModeSpeaker());
+    }
+
     public static Command robotIntake(RobotContainer container) {
         return Commands.either(
             AutomatedSequenceCmds.noteDetectIntakeToShooter(container), 

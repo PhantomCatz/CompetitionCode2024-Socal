@@ -49,11 +49,11 @@ public class FeederIOReal implements FeederIO {
     }
 
     public void fineAdjustFwd() {
-        feederNeo.set(-ShooterFeederConstants.LOAD_MOTOR_ADJUST_SPEED);
+        feederNeo.set(-ShooterFeederConstants.LOAD_MOTOR_FWD_ADJUST_SPEED);
     }
 
     public void fineAdjustBck() {
-        feederNeo.set(ShooterFeederConstants.LOAD_MOTOR_ADJUST_SPEED);
+        feederNeo.set(ShooterFeederConstants.LOAD_MOTOR_BWD_ADJUST_SPEED);
     }
 
     public void feedShooter() {

@@ -1,3 +1,4 @@
+
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
@@ -23,8 +24,8 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.CatzConstants;
+import frc.robot.CatzSubsystems.DriveAndRobotOrientation.CatzRobotTracker;
 import frc.robot.Utilities.Alert;
-import frc.robot.Utilities.AutoAimingParametersUtil;
 import frc.robot.Utilities.LoggedTunableNumber;
 import lombok.RequiredArgsConstructor;
 
@@ -35,7 +36,7 @@ public class CatzShooterPivot {
   private final ShooterPivotIOInputsAutoLogged inputs = new ShooterPivotIOInputsAutoLogged();
 
   // Misc variables
-  private ShooterPivotPositionType m_targetPosition = ShooterPivotPositionType.MANUAL;
+  private ShooterPivotPositionType m_targetPosition = ShooterPivotPositionType.HOME;
   private double targetShooterPivotPosition = 0.0;
   private double manualPwr = 0.0;
   private boolean isCharacterizing = false;
@@ -53,13 +54,12 @@ public class CatzShooterPivot {
   //State machine
   @RequiredArgsConstructor
   public enum ShooterPivotPositionType {
-    AUTO_AIM(()-> AutoAimingParametersUtil.getAutoAimSpeakerParemeters()
-                                          .shooterPivotAngle()
-                                          .getDegrees()), // TODO add auto aim parameters
+    AUTO_AIM(()-> CatzRobotTracker.getInstance().getAutoAimSpeakerParemeters()
+                                                .shooterPivotTicks()), 
     MANUAL(() -> 0.0),
-    HOME(new LoggedTunableNumber("shooterPivot/tunnable/home", 202)),
-    SUBWOOFER(new LoggedTunableNumber("shooterPivot/Tunnable/subwoofer", 10)),
-    TEST(new LoggedTunableNumber("shooterPivot/Tunnable/TestingTicks", 7));
+    HOME(new LoggedTunableNumber("shooterPivot/tunnable/home", 0.0)),
+    SUBWOOFER(new LoggedTunableNumber("shooterPivot/Tunnable/subwoofer", 31.5)), //Was 33.95
+    TEST(new LoggedTunableNumber("shooterPivot/Tunnable/TestingTicks", 33));
 
     private final DoubleSupplier motionType;
     private double getTargetMotionPosition() {
@@ -104,6 +104,15 @@ public class CatzShooterPivot {
 
     // Set Alerts
     disconnectedAlertShooterPivot.set(!inputs.isElevationMotorConnected);
+
+    // Manual softlimits
+    // if(inputs.positionTicks > 11.0 && manualPwr > 0) { //TODO test values
+    //   manualPwr = 0;
+    //   m_targetPosition = ShooterPivotPositionType.SUBWOOFER;
+    // } else if (inputs.positionTicks < 0.0 && manualPwr < 0) {
+    //   manualPwr = 0;
+    //   m_targetPosition = ShooterPivotPositionType.HOME;
+    // }
 
     // Run Setpoint Control
     if(DriverStation.isDisabled()) {

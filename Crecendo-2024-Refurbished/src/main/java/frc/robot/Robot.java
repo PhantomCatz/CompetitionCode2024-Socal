@@ -37,6 +37,7 @@ import frc.robot.CatzConstants.AllianceColor;
 import frc.robot.CatzConstants.RobotHardwareMode;
 import frc.robot.CatzConstants.RobotID;
 import frc.robot.CatzConstants.RobotSenario;
+import frc.robot.CatzSubsystems.DriveAndRobotOrientation.CatzRobotTracker;
 import frc.robot.CatzSubsystems.LEDs.CatzLED;
 import frc.robot.Commands.ControllerModeAbstraction;
 import frc.robot.Utilities.Alert;
@@ -226,10 +227,10 @@ public class Robot extends LoggedRobot {
         System.exit(0);
       }
 
-      if(CatzConstants.getRobotType() != RobotID.SN_TEST) {
-        System.out.println("Wrong Robot ID selection, Check CatzConstants robotID");
-        System.exit(0);
-      }
+      // if(CatzConstants.getRobotType() != RobotID.SN_TEST) {
+      //   System.out.println("Wrong Robot ID selection, Check CatzConstants robotID"); //TODO fix cases for replay
+      //   System.exit(0);
+      // }
     }
 
     DriverStation.silenceJoystickConnectionWarning(true);
@@ -329,8 +330,9 @@ public class Robot extends LoggedRobot {
         }
       }
     }
+    CatzRobotTracker.getInstance().getAutoAimSpeakerParemeters();
   }
-
+  
   @Override
   public void disabledInit() {}
 

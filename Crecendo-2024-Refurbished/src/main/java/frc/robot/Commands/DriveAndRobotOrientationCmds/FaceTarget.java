@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.CatzRobotTracker;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain.CatzDrivetrain;
+import frc.robot.Utilities.AllianceFlipUtil;
 
 public class FaceTarget extends Command{
     private final double kP = 0.1;
@@ -19,7 +20,9 @@ public class FaceTarget extends Command{
 
     private Rotation2d rotDif = new Rotation2d();
     private Translation2d target;
-    private Timer timer;
+    private Translation2d useTarget;
+
+    private Timer timer = new Timer();
 
     public FaceTarget(Translation2d target, CatzDrivetrain drivetrain){
         this.target = target;
@@ -29,12 +32,19 @@ public class FaceTarget extends Command{
     @Override
     public void initialize(){
         timer.reset();
+
+
+        // Alliance Flipping
+        useTarget = target;
+        if(AllianceFlipUtil.shouldFlipToRed()) {
+            useTarget = AllianceFlipUtil.apply(target);
+        }
     }
 
     @Override
     public void execute(){
         Pose2d curPose = tracker.getEstimatedPose();
-        Translation2d posDif = target.minus(curPose.getTranslation());
+        Translation2d posDif = useTarget.minus(curPose.getTranslation());
         rotDif = Rotation2d.fromRadians(Math.atan2(posDif.getY(), posDif.getX())).minus(curPose.getRotation());
 
         drivetrain.drive(new ChassisSpeeds(0, 0, rotDif.getDegrees() * kP), true);

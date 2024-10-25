@@ -1,5 +1,7 @@
 package frc.robot.Autonomous;
 
+import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -26,7 +28,10 @@ import frc.robot.RobotContainer;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.CatzRobotTracker;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain.CatzDrivetrain;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain.DriveConstants;
+import frc.robot.CatzSubsystems.Shooter.ShooterFeeder.CatzShooterFeeder;
 import frc.robot.CatzSubsystems.Shooter.ShooterFlywheels.CatzShooterFlywheels;
+import frc.robot.CatzSubsystems.SuperSubsystem.CatzSuperSubsystem;
+import frc.robot.CatzSubsystems.SuperSubsystem.CatzSuperSubsystem.SuperstructureState;
 import frc.robot.Commands.AutomatedSequenceCmds;
 import frc.robot.Commands.CharacterizationCmds.FeedForwardCharacterization;
 import frc.robot.Commands.DriveAndRobotOrientationCmds.TrajectoryDriveCmd;
@@ -42,10 +47,12 @@ public class CatzAutonomous {
     private boolean trajectoriesLoaded = false;
     private boolean isPathPlannerFlipped = false;
 
+    // Auto Paths
     private PathPlannerPath testPath;
     private PathPlannerPath UpperSpeakerGamepiece1;
-    private PathPlannerPath UpperSpeakerGamepiece2; 
     private PathPlannerPath straightLine;
+    private PathPlannerPath drivestraightBack;
+
 
 
     public CatzAutonomous(RobotContainer container) {
@@ -54,33 +61,63 @@ public class CatzAutonomous {
         // Declare Paths
         testPath  = PathPlannerPath.fromPathFile("Test");
         UpperSpeakerGamepiece1 = PathPlannerPath.fromPathFile("UpperSpeakerGamepiece1");
-        UpperSpeakerGamepiece2 = PathPlannerPath.fromPathFile("UpperSpeakerGamepiece2");
         straightLine = PathPlannerPath.fromPathFile("StraightLine");
+        drivestraightBack = PathPlannerPath.fromPathFile("DriveStraightBack");
 
         //   AUTON Priority LIST 
-        autoPathChooser.addOption("Test Auto", testAuto());
+        // autoPathChooser.addOption("Test Auto", testAuto());
         autoPathChooser.addOption("UpperSpeakerWing1center1", upperSpeakerWing1Center1());
+        autoPathChooser.addOption("DriveStraight back", driveStraightBackScore2());
 
 
 
-        autoPathChooser.addOption("Flywheel Characterization", flywheelCharacterization());
-        autoPathChooser.addOption("StraightLine", straightLine());
+        // autoPathChooser.addOption("Flywheel Characterization", flywheelCharacterization());
+        // autoPathChooser.addOption("StraightLine", straightLine());
 
-        NamedCommands.registerCommand("PrintCMD", Commands.print("HI")); // TODO these comands are broken
         
     }
 
     private Command upperSpeakerWing1Center1() {
+        preloadTrajectoryClass(UpperSpeakerGamepiece1);
         CatzDrivetrain drivetrain = m_container.getCatzDrivetrain();
+        CatzSuperSubsystem superSubsystem = m_container.getCatzSuperstructure();
+        CatzShooterFeeder feeder = m_container.getCatzShooterFeeder();
+
+        List<Double> waypointTimes = Arrays.asList(1.3, 4.0);
+
+        List<Command> commandSequenceOne = Arrays.asList(
+                                                    AutomatedSequenceCmds.noteDetectIntakeToShooter(m_container),
+                                                    AutomatedSequenceCmds.scoreSpeakerAutoAim(m_container, ()->false)
+                                                    );
+
         return new SequentialCommandGroup(
-            new ParallelCommandGroup(
-                new TrajectoryDriveCmd(UpperSpeakerGamepiece1, drivetrain),
-                AutomatedSequenceCmds.noteDetectIntakeToShooter(m_container).alongWith(Commands.print("Intaking"))
-            ),
-            new ParallelCommandGroup(
-                new TrajectoryDriveCmd(UpperSpeakerGamepiece2, drivetrain),
-                AutomatedSequenceCmds.scoreSpeakerAutoAim(m_container, ()-> false).alongWith(Commands.print("shooting"))
-            )
+                Commands.runOnce(()->CatzRobotTracker.getInstance().resetPosition(UpperSpeakerGamepiece1.getPreviewStartingHolonomicPose())),
+                superSubsystem.setSuperStructureState(SuperstructureState.STOW).withTimeout(1),
+                Commands.waitSeconds(1),
+                AutomatedSequenceCmds.scoreSpeakerAutoAim(m_container, ()->false).withTimeout(2),
+                new TrajectoryDriveCmd(UpperSpeakerGamepiece1, drivetrain, waypointTimes, commandSequenceOne, 1)
+        );
+    }
+
+    private Command driveStraightBackScore2() {
+        preloadTrajectoryClass(UpperSpeakerGamepiece1);
+        CatzDrivetrain drivetrain = m_container.getCatzDrivetrain();
+        CatzSuperSubsystem superSubsystem = m_container.getCatzSuperstructure();
+        CatzShooterFeeder feeder = m_container.getCatzShooterFeeder();
+
+        List<Double> waypointTimes = Arrays.asList(2.66, 4.76);
+
+        List<Command> commandSequence = Arrays.asList(
+                                                    AutomatedSequenceCmds.noteDetectIntakeToShooter(m_container).alongWith(Commands.print("intaking")),
+                                                    AutomatedSequenceCmds.scoreSpeakerAutoAim(m_container, ()->false).alongWith(Commands.print("Speaker auot aim"))
+                                                    );
+
+        return new SequentialCommandGroup(
+            Commands.runOnce(()->CatzRobotTracker.getInstance().resetPosition(drivestraightBack.getPreviewStartingHolonomicPose())),
+            superSubsystem.setSuperStructureState(SuperstructureState.STOW).withTimeout(1),
+            Commands.waitSeconds(1),
+            AutomatedSequenceCmds.scoreSpeakerAutoAim(m_container, ()->false).withTimeout(2).alongWith(Commands.print("hid")),
+            new TrajectoryDriveCmd(drivestraightBack, drivetrain, waypointTimes, commandSequence, 1)
         );
     }
 
@@ -88,10 +125,13 @@ public class CatzAutonomous {
     private Command testAuto() {
 
         preloadTrajectoryClass(testPath);
-        
+        List<Double> waypoints = Arrays.asList(0.3,0.8);
+
+        List<Command> commandSequenceOne = Arrays.asList(Commands.print("HI"), Commands.print("2+2"));
+
 
         return new SequentialCommandGroup(
-            new ParallelCommandGroup(new TrajectoryDriveCmd(testPath, m_container.getCatzDrivetrain()))
+            new ParallelCommandGroup(new TrajectoryDriveCmd(testPath, m_container.getCatzDrivetrain(), waypoints, commandSequenceOne, 1))
         );
     }
 
@@ -99,7 +139,6 @@ public class CatzAutonomous {
         preloadTrajectoryClass(straightLine);
 
         return new SequentialCommandGroup(
-            new TrajectoryDriveCmd(straightLine, m_container.getCatzDrivetrain())
         );
     }
 
@@ -116,16 +155,28 @@ public class CatzAutonomous {
     
 
     //Automatic pathfinding command
-    public Command autoFindPathSpeakerLOT() {
+    public Command autoFindPathAmp() {
         List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
-                new Pose2d(2.0, 2.0, Rotation2d.fromDegrees(180)),
-                new Pose2d(1.50, 0.69, Rotation2d.fromDegrees(235))
+                new Pose2d(1.89, 6.29, Rotation2d.fromDegrees(90)),
+                new Pose2d(1.89, 7.76, Rotation2d.fromDegrees(90))
                     );
 
         //send path info to trajectory following command
         return new TrajectoryDriveCmd(bezierPoints, 
                                       DriveConstants.autoPathfindingConstraints, 
-                                      new GoalEndState(0.0, Rotation2d.fromDegrees(235)), m_container.getCatzDrivetrain());
+                                      new GoalEndState(0.0, Rotation2d.fromDegrees(90)), m_container.getCatzDrivetrain(), 2);
+    }
+
+    public Command autoFindPathSpeaker() {
+        List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
+                new Pose2d(4.36, 6.14, Rotation2d.fromDegrees(180)),
+                new Pose2d(2.74, 6.14, Rotation2d.fromDegrees(180))
+                    );
+
+        //send path info to trajectory following command
+        return new TrajectoryDriveCmd(bezierPoints, 
+                                      DriveConstants.autoPathfindingConstraints, 
+                                      new GoalEndState(0.0, Rotation2d.fromDegrees(200)), m_container.getCatzDrivetrain(), 2);
     }
 
     //---------------------------------------------------------------------------------------------------------

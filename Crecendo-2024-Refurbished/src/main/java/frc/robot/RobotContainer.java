@@ -51,9 +51,12 @@ import frc.robot.Commands.DriveAndRobotOrientationCmds.FaceTarget;
 import frc.robot.Commands.DriveAndRobotOrientationCmds.TeleopDriveCmd;
 import frc.robot.Commands.DriveAndRobotOrientationCmds.TrajectoryDriveCmd;
 import frc.robot.Utilities.Alert;
+import frc.robot.Utilities.AllianceFlipUtil;
 import frc.robot.Utilities.Alert.AlertType;
 
 public class RobotContainer {
+
+  public static boolean updateLimelight = true;
 
   // Subsystem Declaration
   private static CatzDrivetrain   drive                = new CatzDrivetrain();
@@ -92,6 +95,8 @@ public class RobotContainer {
   private Questionaire questionaire = new Questionaire(this);
 
   public RobotContainer() {
+
+    NamedCommands.registerCommand("PrintCMD", Commands.print("HI")); // TODO these comands are broken
 
     // Drive And Aux Command Mapping
     configureBindings();
@@ -137,16 +142,20 @@ public class RobotContainer {
     xboxAux.y().onTrue(ControllerModeAbstraction.robotHandoff(this)); // Handoff between shooter and intake
     xboxAux.a().onTrue(superstructure.setSuperStructureState(SuperstructureState.STOW)); // ResetPosition
     xboxAux.x().onTrue(ControllerModeAbstraction.robotScore(this, ()->xboxAux.b().getAsBoolean()));  // Score // Override
+    xboxAux.back().onTrue(ControllerModeAbstraction.robotScoreSubwoofer(this, ()->xboxAux.b().getAsBoolean()));
 
-    Trigger leftStickTrigger = new Trigger(()->(xboxAux.getLeftY() > XboxInterfaceConstants.kDeadband)); // Manual Shooter
-    leftStickTrigger.onTrue(superstructure.setShooterPivotManualPower(()->-xboxAux.getLeftY()));
-    xboxAux.leftStick().onTrue(new InstantCommand());
+    Trigger leftYTrigger = new Trigger(()->(xboxAux.getLeftY() > XboxInterfaceConstants.kDeadband)); // Manual ShooterPivot
+    leftYTrigger.onTrue(superstructure.setShooterPivotManualPower(()->-xboxAux.getLeftY()));
 
-    Trigger rightStickTrigger = new Trigger(()->(xboxAux.getRightX() > XboxInterfaceConstants.kDeadband)); // Manual Turret
-    rightStickTrigger.onTrue(superstructure.setShooterPivotManualPower(()->-xboxAux.getRightX()));
+    Trigger rightYTrigger = new Trigger(()->(xboxAux.getRightX() > XboxInterfaceConstants.kDeadband)); // Manual Turret
+    rightYTrigger.onTrue(superstructure.setTurretManual(()->-xboxAux.getRightX()));
     
     xboxAux.rightBumper().whileTrue(rollers.setRollersIn());
-    xboxAux.leftBumper().whileTrue(rollers.setRollersOut());
+
+    xboxAux.leftBumper().onTrue(rollers.setRollersOut().withTimeout(0.3)
+                                                       .andThen(superstructure.setSuperStructureState(SuperstructureState.SCORE_AMP_PART_2)));
+                                                      //  .unless(()->!superstructure.isPreviousSuperSubsystemStateScoreAmp()))
+                                                      //   );
     xboxAux.leftBumper().and(xboxAux.rightBumper()).whileTrue(rollers.setRollersOff());
 
 
@@ -156,8 +165,11 @@ public class RobotContainer {
     xboxDrv.start().onTrue(drive.cancelTrajectory());
 
     // Auto Driving
-    xboxDrv.b().onTrue(new FaceTarget(new Translation2d(0, 0), drive));
-    xboxDrv.y().onTrue(auto.autoFindPathSpeakerLOT());
+    xboxDrv.y().onTrue(new FaceTarget(FieldConstants.Speaker.centerSpeakerOpening.toTranslation2d(), drive));
+    xboxDrv.b().onTrue(auto.autoFindPathAmp());
+    xboxDrv.x().onTrue(auto.autoFindPathSpeaker());
+    xboxDrv.a().onTrue(superstructure.setSuperStructureState(SuperstructureState.STOW));
+
 
     
     drive.setDefaultCommand(new TeleopDriveCmd(() -> xboxDrv.getLeftX(), 

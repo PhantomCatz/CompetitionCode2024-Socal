@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.CatzConstants;
+import frc.robot.CatzSubsystems.LEDs.CatzLED;
 import lombok.RequiredArgsConstructor;
 
 public class CatzIntakeRollers extends SubsystemBase {
@@ -79,17 +80,13 @@ public class CatzIntakeRollers extends SubsystemBase {
   //    Intake hardware methods
   //
   //-----------------------------------------------------------------------------------------
-  public boolean getBeamBreak() {
-    return inputs.isFrontBeambreakBroken;
+  public boolean isNoteInIntake() {
+    boolean isNoteInIntake = inputs.isFrontBeambreakBroken;
+    CatzLED.getInstance().hasNoteAmp = isNoteInIntake;
+    return isNoteInIntake;
   }
 
   private void setTargetRollerSpeed(TargetSpeed targetSpeed) {
-    // if(getBeamBreak() == true && ((recordTargetSpeed == TargetSpeed.INTAKE) || (recordTargetSpeed == TargetSpeed.HANDOFF_IN) )) {
-    //   io.runDutycycle(TargetSpeed.IDLE.getRollerSpeed());
-    // } else {
-    //   io.runDutycycle(targetSpeed.getRollerSpeed());
-    // }
-
     io.runDutycycle(targetSpeed.getRollerSpeed());
   }
 

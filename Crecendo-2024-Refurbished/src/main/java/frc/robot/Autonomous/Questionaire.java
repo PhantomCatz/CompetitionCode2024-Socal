@@ -42,7 +42,7 @@ public class Questionaire {
                 String pathName = p1.concat(" " + p2);
                 PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
                 
-                questionairePath.put(pathName, new TrajectoryDriveCmd(path, container.getCatzDrivetrain()));
+               // questionairePath.put(pathName, new TrajectoryDriveCmd(path, container.getCatzDrivetrain())); //TODO fix later
             }
         }
     }

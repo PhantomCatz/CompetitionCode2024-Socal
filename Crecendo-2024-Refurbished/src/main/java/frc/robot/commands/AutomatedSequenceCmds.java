@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.CatzSubsystems.Shooter.ShooterFeeder.CatzShooterFeeder;
 import frc.robot.CatzSubsystems.Shooter.ShooterFlywheels.CatzShooterFlywheels;
@@ -29,7 +30,7 @@ public class AutomatedSequenceCmds {
             new ParallelCommandGroup(
                 superstructure.setSuperStructureState(SuperstructureState.INTAKE_GROUND), // Until Intake has made it to final ground pos
                 rollers.setRollersIn()
-            ).until(() -> rollers.getBeamBreak()), // Until Intake Rollers have detected note,
+            ).until(() -> rollers.isNoteInIntake()), // Until Intake Rollers have detected note,
             transferNoteToShooter(container) //Stow is already called in method
         );
     }
@@ -45,7 +46,7 @@ public class AutomatedSequenceCmds {
             new ParallelCommandGroup(
                 superstructure.setSuperStructureState(SuperstructureState.INTAKE_GROUND), // Until Intake has made it to final ground pos
                 rollers.setRollersIn()
-            ).until(()-> rollers.getBeamBreak()), // Until Intake Rollers have detected note,
+            ).until(()-> rollers.isNoteInIntake()), // Until Intake Rollers have detected note,
             superstructure.setSuperStructureState(SuperstructureState.STOW) // Until Intake has stowed 
         );
     }
@@ -64,7 +65,7 @@ public class AutomatedSequenceCmds {
             new ParallelCommandGroup(
                 rollers.setRollersHandofftoIntake(),
                 feeder.commandToIntake()
-            ).until(()->rollers.getBeamBreak()) // Until intake finalizes note position  
+            ).until(()->rollers.isNoteInIntake()) // Until intake finalizes note position  
         );
     }
 
@@ -92,7 +93,7 @@ public class AutomatedSequenceCmds {
         CatzIntakeRollers rollers = container.getCatzIntakeRollers();
 
         return new SequentialCommandGroup(
-            transferNoteToIntake(container).unless(()->rollers.getBeamBreak()),
+            transferNoteToIntake(container).unless(()->rollers.isNoteInIntake()),
             superstructure.setSuperStructureState(SuperstructureState.SCORE_AMP).until(()->superstructure.isElevatorInPosition())
         );
     }
@@ -104,14 +105,59 @@ public class AutomatedSequenceCmds {
         CatzSuperSubsystem superstructure = container.getCatzSuperstructure();
         CatzShooterFlywheels flywheels = container.getCatzShooterFlywheels();
         CatzShooterFeeder feeder = container.getCatzShooterFeeder();
+         RobotContainer.updateLimelight = false;
 
         return new SequentialCommandGroup(
             transferNoteToShooter(container).unless(()->feeder.isNoteBeamBreakBroken()),// Note is already in shooter
             new ParallelCommandGroup(
-                superstructure.setSuperStructureState(SuperstructureState.AUTO_AIM),
-                //flywheels.revCommand(),
-                new SequentialCommandGroup(
-                    Commands.waitUntil(()->(flywheels.atGoal() && superstructure.isTurretAndPivotInPosition())).unless(()->driverOveride.get()), // Until flywheels and shootersuperstructure are in position or driveroverride
+                superstructure.setSuperStructureState(SuperstructureState.AUTO_AIM), //TODO If autoaim isnt reliable, then change to subwoofer
+                
+                flywheels.revCommand(),
+                new SequentialCommandGroup (
+                    Commands.waitSeconds(1.0),
+                    Commands.waitUntil((()->driverOveride.get())).deadlineWith(Commands.waitSeconds(1.5)), // Until flywheels and shootersuperstructure are in position or driveroverride
+                    container.getCatzShooterFeeder().commandShootNote(),
+                    Commands.runOnce(()->RobotContainer.updateLimelight = true)
+                )
+            )
+        );
+    }
+
+    public static Command autonSpeakerShoot(RobotContainer container){
+        CatzSuperSubsystem superstructure = container.getCatzSuperstructure();
+        CatzShooterFlywheels flywheels = container.getCatzShooterFlywheels();
+        CatzShooterFeeder feeder = container.getCatzShooterFeeder();
+
+        return new SequentialCommandGroup(
+            transferNoteToShooter(container).unless(()->feeder.isNoteBeamBreakBroken()),// Note is already in shooter
+            new ParallelCommandGroup(
+                superstructure.setSuperStructureState(SuperstructureState.AUTO_AIM), //TODO If autoaim isnt reliable, then change to subwoofer
+                
+                flywheels.revCommand(),
+                new SequentialCommandGroup (
+                    Commands.waitSeconds(1.0),
+                    container.getCatzShooterFeeder().commandShootNote(),
+                    Commands.runOnce(()->RobotContainer.updateLimelight = true)
+                )
+            )
+        );
+    }
+
+    public static Command   scoreSpeakerSubwoofer(RobotContainer container, Supplier<Boolean> driverOveride) {
+        CatzSuperSubsystem superstructure = container.getCatzSuperstructure();
+        CatzShooterFlywheels flywheels = container.getCatzShooterFlywheels();
+        CatzShooterFeeder feeder = container.getCatzShooterFeeder();
+       
+
+        return new SequentialCommandGroup(
+            transferNoteToShooter(container).unless(()->feeder.isNoteBeamBreakBroken()),// Note is already in shooter
+            new ParallelCommandGroup(
+                superstructure.setSuperStructureState(SuperstructureState.SUBWOOFER), //TODO If autoaim isnt reliable, then change to subwoofer
+                
+                flywheels.revCommand(),
+                new SequentialCommandGroup (
+                    Commands.waitSeconds(1.0),
+                    Commands.waitUntil((()->driverOveride.get())).deadlineWith(Commands.waitSeconds(1.5)), // Until flywheels and shootersuperstructure are in position or driveroverride
                     container.getCatzShooterFeeder().commandShootNote()
                 )
             )

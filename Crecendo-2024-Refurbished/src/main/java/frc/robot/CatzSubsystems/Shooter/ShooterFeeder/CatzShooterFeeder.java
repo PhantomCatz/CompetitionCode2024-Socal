@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.CatzConstants;
+import frc.robot.CatzSubsystems.LEDs.CatzLED;
 
 public class CatzShooterFeeder extends SubsystemBase {
 
@@ -201,7 +202,9 @@ public class CatzShooterFeeder extends SubsystemBase {
   }
 
   public boolean isNoteBeamBreakBroken() {
-    return inputs.isAdjustBeamBreakBroken;
+    boolean isNoteBeamBreakBroken = inputs.isAdjustBeamBreakBroken;
+    CatzLED.getInstance().hasNoteSpeaker = isNoteBeamBreakBroken;
+    return isNoteBeamBreakBroken;
   }
 
   //-----------------------------------------------------------------------------------------

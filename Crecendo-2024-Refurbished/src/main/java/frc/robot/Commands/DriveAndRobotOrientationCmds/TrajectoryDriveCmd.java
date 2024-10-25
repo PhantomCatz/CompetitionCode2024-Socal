@@ -1,5 +1,6 @@
 package frc.robot.Commands.DriveAndRobotOrientationCmds;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.littletonrobotics.junction.Logger;
@@ -20,6 +21,7 @@ import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.CatzConstants;
 import frc.robot.CatzConstants.AllianceColor;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.CatzRobotTracker;
@@ -40,14 +42,35 @@ public class TrajectoryDriveCmd extends Command {
     private final double TIMEOUT_SCALAR = 5;
     private PathPlannerPath path;
 
+    private boolean atTarget = false;
+    public static double pathTimeOut = -999.0;
+
+
+    //Command inside trajectory helper variables
+    private List<Double> waypointsRatios = Arrays.asList();
+    private List<Command> m_commands     = Arrays.asList();
+    private int numConsecutiveWaypointCounter = 0;
+    private double scaledWaypointTime = 0.0;
+    private Command cmd = new InstantCommand();
+
+
+    private boolean executing = false;
+    private boolean done = false;
+
+    //Constructor Logger
+    private int m_constructorLogger = 1; // For determining if the command is auto path find or autonomous
+
 
     /**
      * @param drivetrain           The coordinator between the gyro and the swerve modules.
      * @param trajectory          The trajectory to follow.
      */
-    public TrajectoryDriveCmd(PathPlannerPath newPath, CatzDrivetrain drivetrain) {
+    public TrajectoryDriveCmd(PathPlannerPath newPath, CatzDrivetrain drivetrain, List<Double> waypoints, List<Command> commands, int constructorLogger) {
+        waypointsRatios = waypoints;
+        m_commands = commands;
         path = newPath;
         m_driveTrain = drivetrain;
+        m_constructorLogger = constructorLogger;
         addRequirements(m_driveTrain);
     }
     
@@ -56,15 +79,14 @@ public class TrajectoryDriveCmd extends Command {
     public TrajectoryDriveCmd(List<Translation2d> bezierPoints, 
                               PathConstraints constraints, 
                               GoalEndState endRobotState,
-                              CatzDrivetrain drivetrain) {
+                              CatzDrivetrain drivetrain,
+                              int constructorLogger) {
         PathPlannerPath newPath = new PathPlannerPath(bezierPoints, constraints, endRobotState);
         path = newPath;
         m_driveTrain = drivetrain;
+        m_constructorLogger = constructorLogger;
         addRequirements(m_driveTrain);
     }
-
-    private boolean atTarget = false;
-    private double pathTimeOut;
 
     @Override
     public void initialize() {
@@ -79,8 +101,9 @@ public class TrajectoryDriveCmd extends Command {
             usePath = path.flipPath();
         }
 
-        CatzRobotTracker.getInstance().resetPosition(usePath.getPreviewStartingHolonomicPose());
-        
+        if(m_constructorLogger == 1) {
+            CatzRobotTracker.getInstance().resetPosition(usePath.getPreviewStartingHolonomicPose());
+        }
         this.trajectory = new PathPlannerTrajectory(
             usePath, 
             DriveConstants.
@@ -89,13 +112,18 @@ public class TrajectoryDriveCmd extends Command {
             CatzRobotTracker.getInstance().getRobotRotation()
         );
                                                
-        pathTimeOut = trajectory.getTotalTimeSeconds() * TIMEOUT_SCALAR;
+        pathTimeOut = trajectory.getTotalTimeSeconds() * TIMEOUT_SCALAR; //TODO do we still need this
+        numConsecutiveWaypointCounter = 0;
+        scaledWaypointTime = 0.0;
+        executing = false;
     }
 
     @Override
     public void execute() {
+        double currentTime = this.timer.get();
+
+        // Trajectory Executor
         if(!atTarget){
-            double currentTime = this.timer.get();
     
             // Getters from pathplanner and current robot pose
             PathPlannerTrajectory.State goal = trajectory.sample(Math.min(currentTime, trajectory.getTotalTimeSeconds()));
@@ -109,8 +137,8 @@ public class TrajectoryDriveCmd extends Command {
             */
             Trajectory.State state = new Trajectory.State(currentTime, 
                                                           goal.velocityMps,  //made the holonomic drive controller only rely on its current position, not its velocity because the target velocity is used as a ff
-                                                          goal.accelerationMpsSq, 
-                                                          new Pose2d(goal.positionMeters, new Rotation2d()),
+                                                          0.0, 
+                                                          new Pose2d(goal.positionMeters, goal.heading  ),
                                                           goal.curvatureRadPerMeter);
     
             //construct chassisspeeds
@@ -126,6 +154,36 @@ public class TrajectoryDriveCmd extends Command {
         }else{
             m_driveTrain.stopDriving();
         }
+
+
+        // Command Executer
+        if(!waypointsRatios.isEmpty()) {
+            if(numConsecutiveWaypointCounter < waypointsRatios.size()) {
+                scaledWaypointTime = waypointsRatios.get(numConsecutiveWaypointCounter);  
+                cmd = m_commands.get(numConsecutiveWaypointCounter);   
+                if(executing == false) {
+                    if(currentTime > scaledWaypointTime){
+                        executing = true;
+                        cmd.initialize();
+                        System.out.println(scaledWaypointTime);
+
+                    }
+                }
+            
+
+                if(executing) {
+                    m_commands.get(numConsecutiveWaypointCounter).execute();
+                    if(cmd.isFinished() || (currentTime >= scaledWaypointTime + 2.0)){
+                        done = true;
+                        cmd.end(true);
+                        executing = false;
+                        numConsecutiveWaypointCounter++;
+                    }
+                }
+            }
+        }
+
+
 
     }
 

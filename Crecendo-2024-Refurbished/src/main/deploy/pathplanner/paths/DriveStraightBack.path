@@ -3,41 +3,41 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.957219057295258,
-        "y": 7.065858703145978
+        "x": 1.3803113320512361,
+        "y": 5.55593454044051
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.957219057295254,
-        "y": 7.065858703145978
+        "x": 2.2159004318008644,
+        "y": 5.511956166769477
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 7.742516056460684,
-        "y": 7.329728945172176
+        "x": 2.787619289524294,
+        "y": 5.55593454044051
       },
       "prevControl": {
-        "x": 7.4784339815084095,
-        "y": 7.273139929110974
+        "x": 1.8499654590057029,
+        "y": 5.475890920762093
       },
       "nextControl": {
-        "x": 8.152980877390325,
-        "y": 7.417685692514242
+        "x": 3.9896948365325304,
+        "y": 5.658550745672921
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 4.766646104720781,
-        "y": 6.010377735041184
+        "x": 7.654559309118619,
+        "y": 7.403026234623898
       },
       "prevControl": {
-        "x": 5.631554120251101,
-        "y": 6.112993940273595
+        "x": 6.654559309118619,
+        "y": 7.403026234623898
       },
       "nextControl": null,
       "isLocked": false,
@@ -46,12 +46,24 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.9,
-      "rotationDegrees": 10.330349606324097,
+      "waypointRelativePos": 2.0,
+      "rotationDegrees": 0,
       "rotateFast": false
     }
   ],
-  "constraintZones": [],
+  "constraintZones": [
+    {
+      "name": "New Constraints Zone",
+      "minWaypointRelativePos": 0.5,
+      "maxWaypointRelativePos": 1.15,
+      "constraints": {
+        "maxVelocity": 0.14,
+        "maxAcceleration": 3.0,
+        "maxAngularVelocity": 540.0,
+        "maxAngularAcceleration": 720.0
+      }
+    }
+  ],
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 3.0,
@@ -65,7 +77,7 @@
     "rotateFast": false
   },
   "reversed": false,
-  "folder": "New New Folder",
+  "folder": "DriveStraight Score",
   "previewStartingState": {
     "rotation": 0,
     "velocity": 0
