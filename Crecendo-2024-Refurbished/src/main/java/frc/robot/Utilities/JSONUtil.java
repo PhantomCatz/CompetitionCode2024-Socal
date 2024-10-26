@@ -14,6 +14,11 @@ public class JSONUtil {
         return JSONUtil.getCommandsFromCommandGroup((Object) json.get("command"));
     }
 
+    /**
+     * This code will recursively loop through an auto so it can catch NamedCommands nested within Sequential or Parallel commands.
+     * @param json
+     * @return List of named commands as a JSON object
+     */
     public static ArrayList<Object> getCommandsFromCommandGroup(Object json){
         ArrayList<Object> commandsList = new ArrayList<>();
 

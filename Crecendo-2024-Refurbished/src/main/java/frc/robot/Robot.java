@@ -345,7 +345,6 @@ public class Robot extends LoggedRobot {
     lastDeploymentAlert.set(true);
     autoStart = Timer.getFPGATimestamp();
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
-    // m_autonomousCommand = m_robotContainer.getQuestionaire().getSelectedPath();
 
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();

@@ -117,8 +117,9 @@ public class TrajectoryDriveCmd extends Command {
     
             //construct chassisspeeds
             ChassisSpeeds adjustedSpeeds = hocontroller.calculate(currentPose, state, targetOrientation);
-            // System.out.println(adjustedSpeeds.vxMetersPerSecond);
+            System.out.println("traj: " + adjustedSpeeds.vxMetersPerSecond);
             //send to drivetrain
+
             m_driveTrain.drive(adjustedSpeeds);
             CatzRobotTracker.getInstance().addTrajectorySetpointData(goal.getTargetHolonomicPose());
 

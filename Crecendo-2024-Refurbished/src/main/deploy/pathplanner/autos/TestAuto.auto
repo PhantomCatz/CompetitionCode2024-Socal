@@ -42,6 +42,12 @@
                       "data": {
                         "name": "Score3"
                       }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Score4"
+                      }
                     }
                   ]
                 }
