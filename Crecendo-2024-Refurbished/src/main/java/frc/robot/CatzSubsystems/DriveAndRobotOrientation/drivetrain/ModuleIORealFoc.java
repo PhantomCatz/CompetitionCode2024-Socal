@@ -69,7 +69,7 @@ public class ModuleIORealFoc implements ModuleIO {
     driveTalon.getConfigurator().apply(new TalonFXConfiguration());
 
     // Config Motors Current Limits assume FOC is included with motors
-    driveTalonConfig.TorqueCurrent.PeakForwardTorqueCurrent = 80.0;
+    driveTalonConfig.TorqueCurrent.PeakForwardTorqueCurrent = 80.0; 
     driveTalonConfig.TorqueCurrent.PeakReverseTorqueCurrent = -80.0;
     driveTalonConfig.ClosedLoopRamps.TorqueClosedLoopRampPeriod = 0.02;
     driveTalonConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;

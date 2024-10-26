@@ -59,7 +59,7 @@ public class IntakePivotConstants {
         };
     public static final MotionMagicParameters motionMagicParameters =
         switch (CatzConstants.getRobotType()) {
-            case SN2, SN1 -> new MotionMagicParameters(260, 400, 1600);
+            case SN2, SN1 -> new MotionMagicParameters(80, 100, 1000);
             case SN_TEST -> new MotionMagicParameters(0.0, 0.0, 0.0);
         };
       

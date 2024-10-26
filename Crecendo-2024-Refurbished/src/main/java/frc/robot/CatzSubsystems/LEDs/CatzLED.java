@@ -29,7 +29,8 @@ public class CatzLED extends SubsystemBase {
     public int loopCycleCount = 0;
     public boolean boost = false;
     public boolean intaking = false;
-    public boolean hasNote = false;
+    public boolean hasNoteSpeaker = false;
+    public boolean hasNoteAmp      = false;
 
     // Main Driver LED States
     public boolean isAutoShootSpeaker = false;
@@ -44,14 +45,13 @@ public class CatzLED extends SubsystemBase {
     // MISC LED states
     public boolean endgameAlert = false;
     public boolean sameBattery = false;
-    public boolean armCoast = false;
     public boolean autoFinished = false;
     public double autoFinishedTime = 0.0;
     public boolean lowBatteryAlert = false;
     public boolean demoMode = false;
 
     private Optional<Alliance> alliance = Optional.empty();
-    private Color allianceColor = Color.kGold;
+    private Color allianceColor = Color.kPurple;
     private Color secondaryDisabledColor = Color.kDarkBlue;
     private boolean lastEnabledAuto = false;
     private double lastEnabledTime = 0.0;
@@ -174,12 +174,12 @@ public class CatzLED extends SubsystemBase {
 
             if (trapping || isClimbing || autoDrive || isAutoShootSpeaker) {
                 rainbow(rainbowCycleLength, rainbowDuration);
-            } else if(isAmping) {
-                wave(Color.kBlack, Color.kPink, waveAllianceCycleLength, waveAllianceDuration);
             } else if(isHoarding) {
                 wave(Color.kBlack, Color.kPurple, waveAllianceCycleLength, waveAllianceDuration);
-            } else if (hasNote) {
+            } else if (hasNoteSpeaker) {
                 solid(Color.kGreen);
+            } else if (hasNoteAmp) {
+                solid(Color.kOrange);
             }
 
             if (endgameAlert) {

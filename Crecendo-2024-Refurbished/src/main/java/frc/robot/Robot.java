@@ -37,7 +37,9 @@ import frc.robot.CatzConstants.AllianceColor;
 import frc.robot.CatzConstants.RobotHardwareMode;
 import frc.robot.CatzConstants.RobotID;
 import frc.robot.CatzConstants.RobotSenario;
+import frc.robot.CatzSubsystems.DriveAndRobotOrientation.CatzRobotTracker;
 import frc.robot.CatzSubsystems.LEDs.CatzLED;
+import frc.robot.Commands.ControllerModeAbstraction;
 import frc.robot.Utilities.Alert;
 import frc.robot.Utilities.AllianceFlipUtil;
 import frc.robot.Utilities.Alert.AlertType;
@@ -99,6 +101,7 @@ public class Robot extends LoggedRobot {
 
   // Garbage Collection Alerts
   private final Alert gcAlert = new Alert("Please wait to enable, collecting garbage. 🗑️", AlertType.WARNING);
+  private int garbageCollectionCounter = 0;
 
   // DriverStation related alerts
   private final Alert driverStationDisconnectAlert = new Alert("Driverstation is not online, alliance selection will not work", AlertType.ERROR);
@@ -114,6 +117,9 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotInit() {
+
+    System.gc(); //TBD TODO 
+
     // Record metadata
     Logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME);
     Logger.recordMetadata("BuildDate", BuildConstants.BUILD_DATE);
@@ -221,10 +227,10 @@ public class Robot extends LoggedRobot {
         System.exit(0);
       }
 
-      if(CatzConstants.getRobotType() != RobotID.SN_TEST) {
-        System.out.println("Wrong Robot ID selection, Check CatzConstants robotID");
-        System.exit(0);
-      }
+      // if(CatzConstants.getRobotType() != RobotID.SN_TEST) {
+      //   System.out.println("Wrong Robot ID selection, Check CatzConstants robotID"); //TODO fix cases for replay
+      //   System.exit(0);
+      // }
     }
 
     DriverStation.silenceJoystickConnectionWarning(true);
@@ -278,6 +284,11 @@ public class Robot extends LoggedRobot {
 
     // Garbage Collection alert
     gcAlert.set(Timer.getFPGATimestamp() < 45.0);
+    if((garbageCollectionCounter > 5*60*2)) { // 1 second * 60sec * 2 min
+      System.gc();
+      garbageCollectionCounter = 0;
+    }
+    garbageCollectionCounter++;
 
     // Update battery logging
     String batteryName = batteryNameSubscriber.get();
@@ -319,9 +330,13 @@ public class Robot extends LoggedRobot {
         }
       }
     }
+<<<<<<< HEAD
     m_robotContainer.getCatzAutonomous().updateQuestionaire();
+=======
+    CatzRobotTracker.getInstance().getAutoAimSpeakerParemeters();
+>>>>>>> f6bd68dc54f94c6bdbccd0e072649f541afb119a
   }
-
+  
   @Override
   public void disabledInit() {}
 
@@ -372,6 +387,8 @@ public class Robot extends LoggedRobot {
   @Override
   public void teleopPeriodic() {
     teleElapsedTime = Timer.getFPGATimestamp() - teleStart;
+
+    ControllerModeAbstraction.periodicDebug();
   }
 
   @Override

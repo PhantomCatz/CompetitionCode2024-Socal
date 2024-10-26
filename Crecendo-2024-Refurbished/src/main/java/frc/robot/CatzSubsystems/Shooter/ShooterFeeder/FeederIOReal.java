@@ -41,23 +41,23 @@ public class FeederIOReal implements FeederIO {
     }
 
     public void loadFoward() {
-        feederNeo.set(ShooterFeederConstants.LOAD_MOTOR_LOADING_SPEED);
-    }
-
-    public void loadBackward() {
         feederNeo.set(-ShooterFeederConstants.LOAD_MOTOR_LOADING_SPEED);
     }
 
+    public void loadBackward() {
+        feederNeo.set(ShooterFeederConstants.LOAD_MOTOR_LOADING_SPEED);
+    }
+
     public void fineAdjustFwd() {
-        feederNeo.set(ShooterFeederConstants.LOAD_MOTOR_ADJUST_SPEED);
+        feederNeo.set(-ShooterFeederConstants.LOAD_MOTOR_FWD_ADJUST_SPEED);
     }
 
     public void fineAdjustBck() {
-        feederNeo.set(-ShooterFeederConstants.LOAD_MOTOR_ADJUST_SPEED);
+        feederNeo.set(ShooterFeederConstants.LOAD_MOTOR_BWD_ADJUST_SPEED);
     }
 
     public void feedShooter() {
-        feederNeo.set(ShooterFeederConstants.LOAD_MOTOR_SHOOTING_SPEED);
+        feederNeo.set(-ShooterFeederConstants.LOAD_MOTOR_SHOOTING_SPEED);
     }
 
     public void feedDisabled() {

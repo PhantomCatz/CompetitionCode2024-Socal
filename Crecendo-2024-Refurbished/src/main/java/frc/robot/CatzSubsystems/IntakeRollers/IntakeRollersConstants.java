@@ -8,6 +8,7 @@ import frc.robot.Utilities.MotorUtil.Gains;
 public class IntakeRollersConstants {
     // Subsystem safety disable
     public static final boolean isIntakeRollersDisabled = false;
+    public static final int FRONT_BEAM_BREAK = 4;
 
     // motor ID assignment
     public static final int INTAKE_ROLLER_ID = 

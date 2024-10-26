@@ -11,6 +11,7 @@ import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.CatzConstants;
 import frc.robot.Utilities.LoggedTunableNumber;
@@ -33,11 +34,12 @@ public class CatzIntakePivot {
 
   @RequiredArgsConstructor
   public static enum IntakePivotPosition {
-    SCORE_AMP(new LoggedTunableNumber("Intake/Pivot Score Amp", 90.0)),
+    SCORE_AMP(new LoggedTunableNumber("Intake/Pivot Score Amp", 80.0)),
     PICKUP_SOURCE(new LoggedTunableNumber("Intake/Pivot Pickup Souce", 90.0)),
     PICKUP_GROUND(new LoggedTunableNumber("Intake/Pivot Pickup Ground", -24.0)),
     HOLD(new LoggedTunableNumber("Intake/Pivot Holding Position", 90.0)),
     STOW(new LoggedTunableNumber("Intake/Pivot Stow Position", 164)),
+    ANTI_STUCK(new LoggedTunableNumber("Intake/Pivot Anti Stuck Position", 110)),
     WAIT(()-> targetDegree);
     
     private final DoubleSupplier intakePivotSetpointSupplier;
@@ -84,15 +86,16 @@ public class CatzIntakePivot {
       io.stop();
     } else {
       // Run Softlimit check
-      if(getIntakePivotPosition() > SOFTLIMIT_STOW && m_targetPosition == IntakePivotPosition.STOW) {
+      if(getIntakePivotDegree() > SOFTLIMIT_STOW && m_targetPosition == IntakePivotPosition.STOW) {
         io.stop();
       } else {
          io.runSetpoint(m_targetPosition.getTargetDegree());
       }
     }
     
-    Logger.recordOutput("Target Degree Pivot", m_targetPosition.getTargetDegree());
-    Logger.recordOutput("Enum Intake Pivot", m_targetPosition.name());
+    Logger.recordOutput("IntakePivot/Target Degree Pivot", m_targetPosition.getTargetDegree());
+    Logger.recordOutput("IntakePivot/Enum Intake Pivot", m_targetPosition.name());
+    Logger.recordOutput("IntakePivot/isIntakeInPosition", isIntakeInPosition());
   }
 
   //-----------------------------------------------------------------------------------------
@@ -100,8 +103,16 @@ public class CatzIntakePivot {
   //    Pivot Misc Methods
   //
   //-----------------------------------------------------------------------------------------
-  public double getIntakePivotPosition() {
-    return inputs.positionRads;
+  public double getIntakePivotDegree() {
+    return Units.radiansToDegrees(inputs.positionRads);
+  }
+
+
+  public boolean isIntakeInPosition() {
+    double intakePosition = Math.abs(getIntakePivotDegree());
+    double target = Math.abs(m_targetPosition.getTargetDegree());
+    boolean isIntakeInPos = Math.abs(target - intakePosition) < 2.0;
+    return isIntakeInPos;
   }
 
   //-----------------------------------------------------------------------------------------
@@ -110,7 +121,6 @@ public class CatzIntakePivot {
   //
   //-----------------------------------------------------------------------------------------
   public void setIntakePivotState(IntakePivotPosition targetPosition) {
-    // System.out.println(targetPosition);
     m_targetPosition = targetPosition;
   }
 }

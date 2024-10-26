@@ -11,7 +11,15 @@ public class GyroIONavX implements GyroIO {
 
     public GyroIONavX() {
         navX = new AHRS(Port.kMXP, (byte) 200);
-        //navX.enableLogging(true);
+        navX.enableLogging(true);
+
+        new Thread(() -> {
+          try {
+            Thread.sleep(1000);
+            navX.reset();
+          } catch (Exception E) {
+          }
+        }).start();
         navX.reset(); // implicitly sets the gyro to 0 heading
     }
 

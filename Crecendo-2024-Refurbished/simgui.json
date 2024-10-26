@@ -1,6 +1,7 @@
 {
   "NTProvider": {
     "types": {
+      "/AdvantageKit/RealOutputs/ShooterPivot/pivot": "Mechanism2d",
       "/FMSInfo": "FMSInfo",
       "/SmartDashboard/Choose End Position": "String Chooser",
       "/SmartDashboard/Choose Start Position": "String Chooser",
@@ -12,6 +13,13 @@
       "/SmartDashboard/Question 3 Response": "String Chooser",
       "/SmartDashboard/Question 4 Response": "String Chooser",
       "/SmartDashboard/Question 5 Response": "String Chooser"
+    }
+  },
+  "NetworkTables": {
+    "transitory": {
+      "AdvantageKit": {
+        "open": true
+      }
     }
   },
   "NetworkTables Info": {

@@ -8,12 +8,12 @@ import frc.robot.Utilities.MotorUtil.MotionMagicParameters;
 public class ShooterPivotConstants {
     
     // Subsystem safety disable
-    public static final boolean isShooterPivotDisabled = true;
+    public static final boolean isShooterPivotDisabled = false;
 
     // Initial PIDF and motion magic assignment
     public static final Gains gains =
         switch (CatzConstants.getRobotType()) {
-            case SN2 -> new Gains(90.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);//TODO fix gains
+            case SN2 -> new Gains(0.1, 0.1, 0.0005, 0.0, 0.0, 0.0, 0.0);//TODO fix gains
             case SN1 -> new Gains(75.0, 0.0, 2.5, 0.0, 0.0, 0.0, 0.0);
             case SN_TEST -> new Gains(7000.0, 0.0, 250.0, 8.4, 0.0, 0.0, 22.9);
         };
@@ -31,7 +31,4 @@ public class ShooterPivotConstants {
     public static final LoggedTunableNumber kV = new LoggedTunableNumber("ShooterPivot/Gains/kV", gains.kV());
     public static final LoggedTunableNumber kA = new LoggedTunableNumber("ShooterPivot/Gains/kA", gains.kA());
     public static final LoggedTunableNumber kG = new LoggedTunableNumber("ShooterPivot/Gains/kG", gains.kG());
-    public static final LoggedTunableNumber mmCruiseVelocity = new LoggedTunableNumber("ShooterPivot/Gains/kV", motionMagicParameters.mmCruiseVelocity());
-    public static final LoggedTunableNumber mmAcceleration = new LoggedTunableNumber("ShooterPivot/Gains/kA", motionMagicParameters.mmAcceleration());
-    public static final LoggedTunableNumber mmJerk = new LoggedTunableNumber("ShooterPivot/Gains/kG", motionMagicParameters.mmJerk());
 }

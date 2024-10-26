@@ -222,7 +222,7 @@ public class CatzShooterFlywheels extends SubsystemBase {
   //    Flywheel Instance Factory Commands
   //
   //-----------------------------------------------------------------------------------------
-  public Command shootCommand() {
+  public Command revCommand() {
     return startEnd(() -> setTargetSpeed(ShooterSpeed.SHOOT), 
                     () -> setTargetSpeed(ShooterSpeed.IDLE))
         .withName("Flywheels Shoot");

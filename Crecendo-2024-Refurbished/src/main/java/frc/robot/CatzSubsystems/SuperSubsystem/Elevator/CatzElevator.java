@@ -29,7 +29,7 @@ public class CatzElevator {
   private ElevatorFeedforward ff;
 
   // MISC variables
-  private ElevatorPosition m_targetPosition;
+  private ElevatorPosition m_targetPosition = ElevatorPosition.STOW;
   private static double targetElevatorRotations = 0.0;
   private boolean isCharacterizing = false;
   private BooleanSupplier coastSupplier = () -> false;
@@ -40,8 +40,8 @@ public class CatzElevator {
 
   @RequiredArgsConstructor
   public static enum ElevatorPosition {
-      SCORE_AMP(new LoggedTunableNumber("Elevator/ScoreAmpSetpoint",90.0)),
-      PICKUP_SOURCE(new LoggedTunableNumber("Elevator/ScoreSourceSetpoint",100.0)),
+      SCORE_AMP(new LoggedTunableNumber("Elevator/ScoreAmpSetpoint",50.0)),
+      SCORE_AMP_PART_2(new LoggedTunableNumber("Elevator/ScoreSourceSetpoint",90.0)),
       STOW(() -> 0.0),
       WAIT(() -> targetElevatorRotations);
 
@@ -109,27 +109,12 @@ public class CatzElevator {
     if(DriverStation.isDisabled() || m_targetPosition == null) {
       io.stop();
     } else {
-      // System.out.println((m_targetPosition.getTargetPositionRotations()));
       io.runSetpoint(m_targetPosition.getTargetPositionRotations(), ff.calculate(inputs.velocityRps));
-      // // Run Softlimit check
-      // if(getElevatorPositionRotations() > MAX_ROTATIONS) {
-      //   io.stop();
-      // } else {
-      //   // Run state check
-      //   if(m_targetPosition == ElevatorPosition.STOW) {
-      //     // Run Crossbar hit check
-      //     if(getElevatorPositionRotations() < 5.0) {
-      //       io.stop();
-      //     } else {
-      //       // Run Setpoint Motion Magic    
-      //       io.runSetpoint(m_targetPosition.getTargetPositionRotations(), ff.calculate(inputs.velocityRps));
-      //     }
-      //   } else {
-      //     // Run Setpoint Motion Magic    
-      //     io.runSetpoint(m_targetPosition.getTargetPositionRotations(), ff.calculate(inputs.velocityRps));
-      //   }
-      // }
+
     }
+
+    Logger.recordOutput("Elevator/CurrentRotations", getElevatorPositionRotations());
+    Logger.recordOutput("Elevator/isElevatorInPos", isElevatorInPosition());
 
   }
 
@@ -140,6 +125,10 @@ public class CatzElevator {
   //-----------------------------------------------------------------------------------------
   public double getElevatorPositionRotations() {
     return inputs.leaderPositionRotations;
+  }
+
+  public boolean isElevatorInPosition() {
+    return (Math.abs((getElevatorPositionRotations() - m_targetPosition.getTargetPositionRotations())) < 5.0);
   }
 
   public void setBrakeMode(boolean enabled) {

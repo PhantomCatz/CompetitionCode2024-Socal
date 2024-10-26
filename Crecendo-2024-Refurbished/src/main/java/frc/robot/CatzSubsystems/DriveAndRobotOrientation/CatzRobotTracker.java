@@ -10,14 +10,18 @@ import java.util.Optional;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.geometry.Twist2d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -25,6 +29,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveDriveWheelPositions;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotState;
@@ -37,6 +42,7 @@ import frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain.CatzDrivetra
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain.CatzSwerveModule;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain.DriveConstants;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.vision.CatzVision;
+import frc.robot.Utilities.AllianceFlipUtil;
 import frc.robot.Utilities.CatzMathUtils;
 import frc.robot.Utilities.FieldRelativeAccel;
 import frc.robot.Utilities.FieldRelativeSpeed;
@@ -51,7 +57,7 @@ public class CatzRobotTracker {
 
 
   // Pose Estimation Members
-  private Pose2d odometryPose = new Pose2d();
+  private Pose2d odometryPose = new Pose2d(1.33, 5.54, Rotation2d.fromDegrees(0));
 
   private final TimeInterpolatableBuffer<Pose2d> poseBuffer =
           TimeInterpolatableBuffer.createBuffer(POSE_BUFFER_SIZE_SECONDS);
@@ -306,6 +312,106 @@ public class CatzRobotTracker {
   public ChassisSpeeds getRobotChassisSpeeds() {
     return m_lastChassisSpeeds;
   }
+
+
+  private static AimingParameters latestParameters;
+    /**
+     * 
+     *  Credit: Jetstream 2710
+     * 
+     */
+    public AimingParameters getAutoAimSpeakerParemeters() {
+
+        // Collect Given Variables
+        double vx = CatzRobotTracker.getInstance().getRobotChassisSpeeds().vxMetersPerSecond;
+        double vy = CatzRobotTracker.getInstance().getRobotChassisSpeeds().vyMetersPerSecond;
+
+        Pose2d robotPose = m_poseEstimator.getEstimatedPosition();
+        
+        // Contstruct translation objects for vector addition
+        Translation3d targetPose3d = AllianceFlipUtil.apply(FieldConstants.Speaker.centerSpeakerOpening);
+        Translation2d targetPose = new Translation2d(targetPose3d.getX(), targetPose3d.getY()); 
+        Logger.recordOutput("AutoAim/targetpose3d", targetPose3d);
+        Logger.recordOutput("AutoAim/RobotPose", robotPose);
+    
+
+
+        // Target Robot Shooting Horizontal Angle
+        Vector<N2> addedVelocity = VecBuilder.fill(vx , vy); 
+        Vector<N2> robotToTarget = VecBuilder.fill(targetPose.getX() - robotPose.getX()  , targetPose.getY() - robotPose.getY());
+        //Vector<N2> scaledRobotToTarget = robotToTarget.times(shooter_velocity/robotToTarget.norm());
+        Vector<N2> correctVector = robotToTarget;//.minus(addedVelocity); // Account for robot velocity by subtracting vectors TODO fix later
+        double feildRelTargetRad = -Math.atan(correctVector.get(1,0)/correctVector.get(0,0)); // Take arctangent to find feild relative target rotation
+        
+        Logger.recordOutput("AutoAim/targetAngle", Math.toDegrees(feildRelTargetRad));
+       
+       
+       // Conversion to Turret Angle
+        double targetTurretDegree = Math.toDegrees(feildRelTargetRad);    //Convert from radians to deg
+        if(targetTurretDegree > 180) {         // Roll back if angle is past the softlimit
+          targetTurretDegree = targetTurretDegree - 360;
+        } else if(targetTurretDegree < -180) {
+          targetTurretDegree = targetTurretDegree + 360;
+        }
+        Logger.recordOutput("AutoAim/added velocity Vector", addedVelocity.norm());
+        Logger.recordOutput("AutoAim/robotToTarget Vector", robotToTarget.norm());
+        Logger.recordOutput("AutoAim/Final Vector", correctVector.norm());
+        Logger.recordOutput("AutoAim/After Rollback targetAngle", targetTurretDegree);
+
+
+
+        // Target Robot Shooter Elevation Angle
+        double targetDistance = targetPose.getDistance(robotPose.getTranslation());
+        double elevationTicks = shooterPivotTable.get(targetDistance);
+
+        Logger.recordOutput("AutoAim/targetDistance", targetDistance);
+        Logger.recordOutput("AutoAim/TargetElevationAngle", elevationTicks);
+
+        latestParameters =
+            new AimingParameters(
+                Rotation2d.fromDegrees(targetTurretDegree),
+                elevationTicks,
+                targetDistance,
+                new FlywheelSpeeds(0, 0));
+       // if (latestParameters != null) {
+            // Cache previously calculated aiming parameters. Cache is invalidated whenever new
+            // observations are added.
+            return latestParameters;
+        
+        //} 
+    }
+
+
+    public record AimingParameters(
+        Rotation2d turretHeading,
+        double shooterPivotTicks,
+        double effectiveDistance,
+        FlywheelSpeeds flywheelSpeeds) {}
+
+    public record FlywheelSpeeds(double leftSpeed, double rightSpeed) {
+        public static FlywheelSpeeds interpolate(FlywheelSpeeds t1, FlywheelSpeeds t2, double v) {
+        double leftSpeed = MathUtil.interpolate(t1.leftSpeed(), t2.leftSpeed(), v);
+        double rightSpeed = MathUtil.interpolate(t1.rightSpeed(), t2.rightSpeed(), v);
+        return new FlywheelSpeeds(leftSpeed, rightSpeed);
+        }
+    }
+
+    //------------------------------------------------------------------------------------------------
+    //  Shooter EL angle look up table key: 
+    //    Param 1: Distance in meters from back wall to Center of the robot
+    //    Param 2: pivot position % of max elevation units
+    // TBD - how did we determine distance interval?
+    // TBD - explain why two distance values
+    //------------------------------------------------------------------------------------------------
+    private static final InterpolatingDoubleTreeMap shooterPivotTable = new InterpolatingDoubleTreeMap();
+
+    static {
+        shooterPivotTable.put(1.478, 36.1);
+
+
+        shooterPivotTable.put(2.6, 0.0);
+    }
+
 
 
   /**************************************************************
