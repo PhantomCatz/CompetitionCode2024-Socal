@@ -116,7 +116,6 @@ public class CatzDrivetrain extends SubsystemBase {
         PathPlannerLogging.setLogTargetPoseCallback((pose) -> {
             Logger.recordOutput("Drive/targetPost", pose);
             CatzRobotTracker.getInstance().addTrajectorySetpointData(pose);
-            System.out.println("debug");
             field.getObject("target pose").setPose(pose);
         });
 
@@ -196,7 +195,6 @@ public class CatzDrivetrain extends SubsystemBase {
         if(isDiscretizeEnabled) {
             chassisSpeeds = ChassisSpeeds.discretize(chassisSpeeds, 0.02);
         }
-        
         // Convert chassis speeds to individual module states and set module states
         SwerveModuleState[] moduleStates = DriveConstants.swerveDriveKinematics.toSwerveModuleStates(chassisSpeeds);
 
@@ -228,7 +226,7 @@ public class CatzDrivetrain extends SubsystemBase {
 
     /** Runs in a circle at omega. */
     public void runWheelRadiusCharacterization(double omegaSpeed) {
-        drive(new ChassisSpeeds(0.0, 0.0, omegaSpeed), false);
+        drive(new ChassisSpeeds(0.0, 0.0, omegaSpeed));
     }
 
     /** Disables the characterization mode. */

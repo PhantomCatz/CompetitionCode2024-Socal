@@ -80,7 +80,7 @@ public class CatzRobotTracker {
 
   private boolean hasTarget;
 
-  @AutoLogOutput @Getter @Setter private boolean flywheelAccelerating = false;
+  @AutoLogOutput private boolean flywheelAccelerating = false;
 
   protected Twist2d robotAccelerations = new Twist2d();
   protected SwerveDriveOdometry odometry;

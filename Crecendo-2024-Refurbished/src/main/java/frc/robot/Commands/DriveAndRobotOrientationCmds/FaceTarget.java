@@ -47,7 +47,7 @@ public class FaceTarget extends Command{
         Translation2d posDif = useTarget.minus(curPose.getTranslation());
         rotDif = Rotation2d.fromRadians(Math.atan2(posDif.getY(), posDif.getX())).minus(curPose.getRotation());
 
-        drivetrain.drive(new ChassisSpeeds(0, 0, rotDif.getDegrees() * kP), true);
+        drivetrain.drive(new ChassisSpeeds(0, 0, rotDif.getDegrees() * kP));
     }
     
     @Override

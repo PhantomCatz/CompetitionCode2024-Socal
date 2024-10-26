@@ -92,7 +92,6 @@ public class RobotContainer {
   // Auto Declaration
   private AutomatedSequenceCmds autosequence = new AutomatedSequenceCmds();
   private CatzAutonomous auto = new CatzAutonomous(this);
-  private Questionaire questionaire = new Questionaire(this);
 
   public RobotContainer() {
 
@@ -224,10 +223,6 @@ public class RobotContainer {
   //      Subsystem getters
   //
   //---------------------------------------------------------------------------
-  public Questionaire getQuestionaire(){
-    return questionaire;
-  }
-
   public CatzDrivetrain getCatzDrivetrain() {
     return drive;
   }
@@ -254,6 +249,10 @@ public class RobotContainer {
 
   public CatzIntakePivot getCatzIntakePivot() {
     return intakePivot;
+  }
+
+  public CatzAutonomous getCatzAutonomous(){
+    return auto;
   }
 
   public Command getAutonomousCommand() {

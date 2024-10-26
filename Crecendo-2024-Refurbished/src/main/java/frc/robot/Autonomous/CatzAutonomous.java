@@ -2,31 +2,38 @@ package frc.robot.Autonomous;
 
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
-import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.GoalEndState;
-import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.PathPlannerTrajectory;
+import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
+import com.pathplanner.lib.util.ReplanningConfig;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.RobotState;
+import edu.wpi.first.wpilibj.Filesystem;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import frc.robot.CatzConstants;
+import edu.wpi.first.wpilibj2.command.PrintCommand;
 import frc.robot.RobotContainer;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.CatzRobotTracker;
-import frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain.CatzDrivetrain;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain.DriveConstants;
 import frc.robot.CatzSubsystems.Shooter.ShooterFeeder.CatzShooterFeeder;
 import frc.robot.CatzSubsystems.Shooter.ShooterFlywheels.CatzShooterFlywheels;
@@ -37,109 +44,99 @@ import frc.robot.Commands.CharacterizationCmds.FeedForwardCharacterization;
 import frc.robot.Commands.DriveAndRobotOrientationCmds.TrajectoryDriveCmd;
 import frc.robot.Commands.DriveAndRobotOrientationCmds.WaitUntilPassX;
 import frc.robot.Utilities.AllianceFlipUtil;
-import frc.robot.Utilities.AllianceFlipUtil.PathPlannerFlippingState;
+import frc.robot.Utilities.JSONUtil;
 
 public class CatzAutonomous {
-    
+    private final int MAX_QUESTIONS = 5;
+
     private static LoggedDashboardChooser<Command> autoPathChooser = new LoggedDashboardChooser<>("Chosen Autonomous Path");
     private RobotContainer m_container;
-
     private boolean trajectoriesLoaded = false;
-    private boolean isPathPlannerFlipped = false;
+    private JSONParser parser = new JSONParser();
 
-    // Auto Paths
-    private PathPlannerPath testPath;
-    private PathPlannerPath UpperSpeakerGamepiece1;
-    private PathPlannerPath straightLine;
-    private PathPlannerPath drivestraightBack;
-
-
+    private HashMap<String, ModifiableCmd> modifiableCmds = new HashMap<>();
+    private File pathsDirectory = new File(Filesystem.getDeployDirectory(), "choreo");
+    private File autosDirectory = new File(Filesystem.getDeployDirectory(), "pathplanner/autos");
+    private String lastAutoName = null;
 
     public CatzAutonomous(RobotContainer container) {
 
         this.m_container = container;
-        // Declare Paths
-        testPath  = PathPlannerPath.fromPathFile("Test");
-        UpperSpeakerGamepiece1 = PathPlannerPath.fromPathFile("UpperSpeakerGamepiece1");
-        straightLine = PathPlannerPath.fromPathFile("StraightLine");
-        drivestraightBack = PathPlannerPath.fromPathFile("DriveStraightBack");
 
-        //   AUTON Priority LIST 
-        // autoPathChooser.addOption("Test Auto", testAuto());
-        autoPathChooser.addOption("UpperSpeakerWing1center1", upperSpeakerWing1Center1());
-        autoPathChooser.addOption("DriveStraight back", driveStraightBackScore2());
-
-
-
-        // autoPathChooser.addOption("Flywheel Characterization", flywheelCharacterization());
-        // autoPathChooser.addOption("StraightLine", straightLine());
-
+        CatzRobotTracker tracker = CatzRobotTracker.getInstance();
+        HolonomicPathFollowerConfig config = new HolonomicPathFollowerConfig(
+            DriveConstants.driveConfig.maxLinearVelocity(), 
+            DriveConstants.driveConfig.driveBaseRadius(),   
+            new ReplanningConfig()
+        );
         
+        BooleanSupplier shouldFlip = ()->AllianceFlipUtil.shouldFlipToRed();
+        AutoBuilder.configureHolonomic(
+            tracker::getEstimatedPose,
+            tracker::resetPosition,
+            tracker::getRobotChassisSpeeds,
+            container.getCatzDrivetrain()::drive,
+            config,
+            shouldFlip,
+            container.getCatzDrivetrain()
+        );
+
+        HashMap<String, Command> scoringPositions = new HashMap<>();
+        scoringPositions.put("High", new PrintCommand("High"));
+        scoringPositions.put("Mid", new PrintCommand("Mid"));
+        scoringPositions.put("Low", new PrintCommand("Low"));
+        modifiableCmds.put("Score1", new ModifiableCmd("Scoring Position 1?", scoringPositions));
+        modifiableCmds.put("Score2", new ModifiableCmd("Scoring Position 2?", scoringPositions));
+        modifiableCmds.put("Score3", new ModifiableCmd("Scoring Position 3?", scoringPositions));
+
+        modifiableCmds.forEach((k, v) -> {
+            NamedCommands.registerCommand(k, v);
+        });
+        for(File pathFile : pathsDirectory.listFiles()){
+            //to get rid of the extensions trailing the path names
+            String pathName = pathFile.getName().replaceFirst("[.][^.]+$", ""); 
+            PathPlannerPath path = PathPlannerPath.fromChoreoTrajectory(pathName);
+            NamedCommands.registerCommand(pathName, new TrajectoryDriveCmd(path, container.getCatzDrivetrain()));
+        }
+        for (File autoFile: autosDirectory.listFiles()){
+            String autoName = autoFile.getName().replaceFirst("[.][^.]+$", "");
+            autoPathChooser.addDefaultOption(autoName, new PathPlannerAuto(autoName));
+        }
     }
 
-    private Command upperSpeakerWing1Center1() {
-        preloadTrajectoryClass(UpperSpeakerGamepiece1);
-        CatzDrivetrain drivetrain = m_container.getCatzDrivetrain();
-        CatzSuperSubsystem superSubsystem = m_container.getCatzSuperstructure();
-        CatzShooterFeeder feeder = m_container.getCatzShooterFeeder();
+    public void updateQuestionaire(){
+        try {
+            String autoName = autoPathChooser.get().getName() + ".auto";
+            JSONObject json = (JSONObject) parser.parse(new FileReader(Filesystem.getDeployDirectory()+"/pathplanner/autos/"+autoName));
 
-        List<Double> waypointTimes = Arrays.asList(1.3, 4.0);
+            if (!autoName.equals(lastAutoName)){
+                lastAutoName = autoName;
 
-        List<Command> commandSequenceOne = Arrays.asList(
-                                                    AutomatedSequenceCmds.noteDetectIntakeToShooter(m_container),
-                                                    AutomatedSequenceCmds.scoreSpeakerAutoAim(m_container, ()->false)
-                                                    );
+                for(int i=1; i<=MAX_QUESTIONS; i++){
+                    String questionName = "Question " + String.valueOf(i);
+                    SmartDashboard.putString(questionName, "");
+                    SmartDashboard.putData(questionName + " Response", new SendableChooser<Command>());
+                }
 
-        return new SequentialCommandGroup(
-                Commands.runOnce(()->CatzRobotTracker.getInstance().resetPosition(UpperSpeakerGamepiece1.getPreviewStartingHolonomicPose())),
-                superSubsystem.setSuperStructureState(SuperstructureState.STOW).withTimeout(1),
-                Commands.waitSeconds(1),
-                AutomatedSequenceCmds.scoreSpeakerAutoAim(m_container, ()->false).withTimeout(2),
-                new TrajectoryDriveCmd(UpperSpeakerGamepiece1, drivetrain, waypointTimes, commandSequenceOne, 1)
-        );
-    }
+                //im sorry
+                ArrayList<Object> commands = JSONUtil.getCommandsFromPath(json);
+                int questionCounter = 1;
 
-    private Command driveStraightBackScore2() {
-        preloadTrajectoryClass(UpperSpeakerGamepiece1);
-        CatzDrivetrain drivetrain = m_container.getCatzDrivetrain();
-        CatzSuperSubsystem superSubsystem = m_container.getCatzSuperstructure();
-        CatzShooterFeeder feeder = m_container.getCatzShooterFeeder();
-
-        List<Double> waypointTimes = Arrays.asList(2.66, 4.76);
-
-        List<Command> commandSequence = Arrays.asList(
-                                                    AutomatedSequenceCmds.noteDetectIntakeToShooter(m_container).alongWith(Commands.print("intaking")),
-                                                    AutomatedSequenceCmds.scoreSpeakerAutoAim(m_container, ()->false).alongWith(Commands.print("Speaker auot aim"))
-                                                    );
-
-        return new SequentialCommandGroup(
-            Commands.runOnce(()->CatzRobotTracker.getInstance().resetPosition(drivestraightBack.getPreviewStartingHolonomicPose())),
-            superSubsystem.setSuperStructureState(SuperstructureState.STOW).withTimeout(1),
-            Commands.waitSeconds(1),
-            AutomatedSequenceCmds.scoreSpeakerAutoAim(m_container, ()->false).withTimeout(2).alongWith(Commands.print("hid")),
-            new TrajectoryDriveCmd(drivestraightBack, drivetrain, waypointTimes, commandSequence, 1)
-        );
-    }
-
-
-    private Command testAuto() {
-
-        preloadTrajectoryClass(testPath);
-        List<Double> waypoints = Arrays.asList(0.3,0.8);
-
-        List<Command> commandSequenceOne = Arrays.asList(Commands.print("HI"), Commands.print("2+2"));
-
-
-        return new SequentialCommandGroup(
-            new ParallelCommandGroup(new TrajectoryDriveCmd(testPath, m_container.getCatzDrivetrain(), waypoints, commandSequenceOne, 1))
-        );
-    }
-
-    private Command straightLine(){
-        preloadTrajectoryClass(straightLine);
-
-        return new SequentialCommandGroup(
-        );
+                for(Object o : commands){
+                    String commandName = JSONUtil.getCommandName(o);
+                    ModifiableCmd modifiableCommand = modifiableCmds.get(commandName);
+                    
+                    if(modifiableCommand != null){
+                        String questionName = "Question " + String.valueOf(questionCounter);
+                        SmartDashboard.putString(questionName, modifiableCommand.getQuestion());
+                        SmartDashboard.putData(questionName + " Response", modifiableCommand.getChooser());
+                        questionCounter += 1;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     //---------------------------------------------------------------------------------------------------------
@@ -190,9 +187,9 @@ public class CatzAutonomous {
         if (!trajectoriesLoaded) {
             trajectoriesLoaded = true;
             var trajectory = new PathPlannerTrajectory(
-                    segment,
-                    CatzRobotTracker.getInstance().getRobotChassisSpeeds(),
-                    CatzRobotTracker.getInstance().getEstimatedPose().getRotation());
+                segment,
+                CatzRobotTracker.getInstance().getRobotChassisSpeeds(),
+                CatzRobotTracker.getInstance().getEstimatedPose().getRotation());
         }
     }
 

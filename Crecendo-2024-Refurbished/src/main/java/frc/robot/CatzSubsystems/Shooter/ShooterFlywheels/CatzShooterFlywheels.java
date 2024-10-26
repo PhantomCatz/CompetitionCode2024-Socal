@@ -146,9 +146,9 @@ public class CatzShooterFlywheels extends SubsystemBase {
                      ff.calculate(leftSetpoint), 
                      ff.calculate(rightSetpoint)
       );
-      CatzRobotTracker.getInstance().setFlywheelAccelerating(!atGoal() || isDrawingHighCurrent());
+      // CatzRobotTracker.getInstance().setFlywheelAccelerating(!atGoal() || isDrawingHighCurrent());
     } else if (targetSpeed == ShooterSpeed.IDLE) {
-      CatzRobotTracker.getInstance().setFlywheelAccelerating(false);
+      // CatzRobotTracker.getInstance().setFlywheelAccelerating(false);
       io.stop();
     }
 

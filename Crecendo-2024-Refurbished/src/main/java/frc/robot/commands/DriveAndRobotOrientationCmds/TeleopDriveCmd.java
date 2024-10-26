@@ -87,7 +87,7 @@ public class TeleopDriveCmd extends Command {
 
 
     // Send new chassisspeeds object to the drivetrain
-    m_drivetrain.drive(chassisSpeeds, true);
+    m_drivetrain.drive(chassisSpeeds);
   }
 
   public void debugLogsDrive(){

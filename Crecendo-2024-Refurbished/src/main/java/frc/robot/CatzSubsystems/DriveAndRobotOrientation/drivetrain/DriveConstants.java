@@ -68,7 +68,7 @@ public class DriveConstants {
             case SN2 ->
                 new ModuleGainsAndRatios(
                     5.5,
-                    0.125,
+                    0.6,
                     0.0,
                     1.2,
                     0.0,
@@ -146,8 +146,8 @@ public class DriveConstants {
 
     public static HolonomicDriveController getNewHolController(){
         return new HolonomicDriveController(
-            new PIDController(10.0, 0, 0.1), 
-            new PIDController(10.0, 0, 0.1),
+            new PIDController(10.0, 0.0, 0.1), 
+            new PIDController(10.0, 0.0, 0.1),
             new ProfiledPIDController(
                 10, 0, 0,
                 new TrapezoidProfile.Constraints(driveConfig.maxAngularVelocity, driveConfig.maxAngularAcceleration)

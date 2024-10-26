@@ -9,6 +9,7 @@ import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.PathPlannerTrajectory;
+import com.pathplanner.lib.path.PathPlannerTrajectory.State;
 
 import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
@@ -33,6 +34,7 @@ public class TrajectoryDriveCmd extends Command {
 
     public static final double ALLOWABLE_POSE_ERROR = 0.05;
     public static final double ALLOWABLE_ROTATION_ERROR = 5;
+    public static final double ALLOWABLE_VEL_ERROR = 0.2;
 
     private CatzDrivetrain m_driveTrain;
     private PathPlannerTrajectory trajectory;
@@ -137,15 +139,15 @@ public class TrajectoryDriveCmd extends Command {
             */
             Trajectory.State state = new Trajectory.State(currentTime, 
                                                           goal.velocityMps,  //made the holonomic drive controller only rely on its current position, not its velocity because the target velocity is used as a ff
-                                                          0.0, 
-                                                          new Pose2d(goal.positionMeters, goal.heading  ),
+                                                          goal.accelerationMpsSq, 
+                                                          new Pose2d(goal.positionMeters, goal.heading),
                                                           goal.curvatureRadPerMeter);
     
             //construct chassisspeeds
             ChassisSpeeds adjustedSpeeds = hocontroller.calculate(currentPose, state, targetOrientation);
-
+            // System.out.println(adjustedSpeeds.vxMetersPerSecond);
             //send to drivetrain
-            m_driveTrain.drive(adjustedSpeeds, true);
+            m_driveTrain.drive(adjustedSpeeds);
             CatzRobotTracker.getInstance().addTrajectorySetpointData(goal.getTargetHolonomicPose());
 
             Logger.recordOutput("CatzRobotTracker/Desired Auto Pose", new Pose2d(state.poseMeters.getTranslation(), goal.targetHolonomicRotation));
@@ -211,13 +213,21 @@ public class TrajectoryDriveCmd extends Command {
     @Override
     public boolean isFinished() {
         // Finish command if the total time the path takes is over
-        double currentPosX =        CatzRobotTracker.getInstance().getEstimatedPose().getX();
-        double currentPosY =        CatzRobotTracker.getInstance().getEstimatedPose().getY();
-        double currentRotation =    CatzRobotTracker.getInstance().getEstimatedPose().getRotation().getDegrees();
+        State endState = trajectory.getEndState();
+        CatzRobotTracker tracker = CatzRobotTracker.getInstance();
 
-        double desiredPosX =        trajectory.getEndState().positionMeters.getX();
-        double desiredPosY =        trajectory.getEndState().positionMeters.getY();
-        double desiredRotation =    trajectory.getEndState().targetHolonomicRotation.getDegrees();
+        double currentPosX =        tracker.getEstimatedPose().getX();
+        double currentPosY =        tracker.getEstimatedPose().getY();
+        double currentRotation =    tracker.getEstimatedPose().getRotation().getDegrees();
+
+        double desiredPosX =        endState.positionMeters.getX();
+        double desiredPosY =        endState.positionMeters.getY();
+        double desiredRotation =    endState.targetHolonomicRotation.getDegrees();
+
+        //Another condition to end trajectory. If end target velocity is zero, then only stop if the robot velocity is also near zero so it doesn't run over its target.
+        double desiredMPS = trajectory.getEndState().velocityMps;
+        ChassisSpeeds currentChassisSpeeds = tracker.getRobotChassisSpeeds();
+        double currentMPS = Math.hypot(currentChassisSpeeds.vxMetersPerSecond, currentChassisSpeeds.vyMetersPerSecond);
 
         double xError =        Math.abs(desiredPosX - currentPosX);
         double yError =        Math.abs(desiredPosY - currentPosY);
@@ -226,9 +236,12 @@ public class TrajectoryDriveCmd extends Command {
             rotationError = 360-rotationError;
         }
 
-        atTarget = (xError < ALLOWABLE_POSE_ERROR && 
-                    yError < ALLOWABLE_POSE_ERROR && 
-                    rotationError < ALLOWABLE_ROTATION_ERROR);
+        atTarget = (
+            xError < ALLOWABLE_POSE_ERROR && 
+            yError < ALLOWABLE_POSE_ERROR && 
+            rotationError < ALLOWABLE_ROTATION_ERROR &&
+            (desiredMPS == 0 || currentMPS < ALLOWABLE_VEL_ERROR)
+        );
 
         return atTarget || timer.hasElapsed(pathTimeOut);
     } 
