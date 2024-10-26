@@ -20,6 +20,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -67,12 +68,9 @@ public class TrajectoryDriveCmd extends Command {
      * @param drivetrain           The coordinator between the gyro and the swerve modules.
      * @param trajectory          The trajectory to follow.
      */
-    public TrajectoryDriveCmd(PathPlannerPath newPath, CatzDrivetrain drivetrain, List<Double> waypoints, List<Command> commands, int constructorLogger) {
-        waypointsRatios = waypoints;
-        m_commands = commands;
+    public TrajectoryDriveCmd(PathPlannerPath newPath, CatzDrivetrain drivetrain) {
         path = newPath;
         m_driveTrain = drivetrain;
-        m_constructorLogger = constructorLogger;
         addRequirements(m_driveTrain);
     }
     
@@ -103,7 +101,7 @@ public class TrajectoryDriveCmd extends Command {
             usePath = path.flipPath();
         }
 
-        if(m_constructorLogger == 1) {
+        if(DriverStation.isAutonomous()) {
             CatzRobotTracker.getInstance().resetPosition(usePath.getPreviewStartingHolonomicPose());
         }
         this.trajectory = new PathPlannerTrajectory(
