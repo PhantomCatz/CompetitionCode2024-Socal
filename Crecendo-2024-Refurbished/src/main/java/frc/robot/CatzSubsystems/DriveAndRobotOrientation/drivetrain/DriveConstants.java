@@ -1,5 +1,6 @@
 package frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain;
 
+import com.google.flatbuffers.Constants;
 import com.pathplanner.lib.path.PathConstraints;
 
 import edu.wpi.first.math.controller.HolonomicDriveController;
@@ -88,6 +89,13 @@ public class DriveConstants {
                     Mk4iReductions.L2_PLUS.reduction,
                     Mk4iReductions.steer.reduction);
         };
+    // Odometry Constants
+    public static final double odometryFrequency =
+        switch (CatzConstants.getRobotType()) {
+            case SN_TEST -> 50.0;
+            case SN1 -> 100.0;
+            case SN2 -> 250.0;
+        };
 
     // Logged Tunable PIDF values for swerve modules
     public static final LoggedTunableNumber drivekP = new LoggedTunableNumber("Drive/Module/DrivekP", moduleGainsAndRatios.drivekP());
@@ -121,6 +129,7 @@ public class DriveConstants {
                     new ModuleConfig(7, 8, 6, 0.0)
                 };
         };
+    public static final int GYRO_ID = 0;
 
     //-----------------------------------------------------------------------------------------------------------------------------
     //

@@ -31,7 +31,7 @@ public class GyroIONavX implements GyroIO {
       inputs.gyroYawDegrees   = navX.getYaw();
       inputs.gyroRollDegrees  = navX.getRoll(); 
            
-      inputs.gyroAngleVel     = navX.getRate();
+      inputs.gyroYawVel     = navX.getRate();
       inputs.gyroAccelX       = navX.getWorldLinearAccelX();
       inputs.gyroAccelY       = navX.getWorldLinearAccelY();
     }
