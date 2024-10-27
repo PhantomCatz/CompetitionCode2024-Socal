@@ -19,9 +19,11 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.CatzConstants;
+import frc.robot.Robot;
 import frc.robot.CatzConstants.AllianceColor;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.CatzRobotTracker;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain.CatzDrivetrain;
@@ -81,8 +83,10 @@ public class TrajectoryDriveCmd extends Command {
             usePath = path.flipPath();
         }
 
-        CatzRobotTracker.getInstance().resetPosition(usePath.getPreviewStartingHolonomicPose());
-        
+        if(!Robot.isResetPositionUsedInAuto && DriverStation.isAutonomous()) {
+            CatzRobotTracker.getInstance().resetPosition(usePath.getPreviewStartingHolonomicPose());
+        }
+
         this.trajectory = new PathPlannerTrajectory(
             usePath, 
             DriveConstants.
@@ -117,7 +121,6 @@ public class TrajectoryDriveCmd extends Command {
     
             //construct chassisspeeds
             ChassisSpeeds adjustedSpeeds = hocontroller.calculate(currentPose, state, targetOrientation);
-            System.out.println("traj: " + adjustedSpeeds.vxMetersPerSecond);
             //send to drivetrain
 
             m_driveTrain.drive(adjustedSpeeds);

@@ -2,8 +2,8 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 2,
-      "y": 2
+      "x": 1.3842846515935527,
+      "y": 5.574358195791997
     },
     "rotation": 0
   },
@@ -15,6 +15,24 @@
           "type": "named",
           "data": {
             "name": "Choreo"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Test"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Score1"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Score2"
           }
         }
       ]
