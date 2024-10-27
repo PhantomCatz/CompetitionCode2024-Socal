@@ -63,13 +63,13 @@ public class CatzAutonomous {
 
         this.m_container = container;
 
+        // Path follwing setup
         CatzRobotTracker tracker = CatzRobotTracker.getInstance();
         HolonomicPathFollowerConfig config = new HolonomicPathFollowerConfig(
             DriveConstants.driveConfig.maxLinearVelocity(), 
             DriveConstants.driveConfig.driveBaseRadius(),   
             new ReplanningConfig()
         );
-        
         BooleanSupplier shouldFlip = ()->AllianceFlipUtil.shouldFlipToRed();
         AutoBuilder.configureHolonomic(
             tracker::getEstimatedPose,
@@ -81,6 +81,7 @@ public class CatzAutonomous {
             container.getCatzDrivetrain()
         );
 
+        // Questionaire configuration
         HashMap<String, Command> scoringPositions = new HashMap<>();
         scoringPositions.put("High", new PrintCommand("High"));
         scoringPositions.put("Mid", new PrintCommand("Mid"));
@@ -88,6 +89,7 @@ public class CatzAutonomous {
         modifiableCmds.put("Score1", new ModifiableCmd("Scoring Position 1?", scoringPositions));
         modifiableCmds.put("Score2", new ModifiableCmd("Scoring Position 2?", scoringPositions));
         modifiableCmds.put("Score3", new ModifiableCmd("Scoring Position 3?", scoringPositions));
+        modifiableCmds.put("Score4", new ModifiableCmd("Scoring Position 4?", scoringPositions));
 
         modifiableCmds.forEach((k, v) -> {
             NamedCommands.registerCommand(k, v);
@@ -98,6 +100,15 @@ public class CatzAutonomous {
             PathPlannerPath path = PathPlannerPath.fromChoreoTrajectory(pathName);
             NamedCommands.registerCommand(pathName, new TrajectoryDriveCmd(path, container.getCatzDrivetrain()));
         }
+        
+        HashMap<String, Command> moveOptions = new HashMap<>();
+        moveOptions.put("Spin", NamedCommands.getCommand("Spin"));
+        moveOptions.put("Move", NamedCommands.getCommand("Choreo"));
+        modifiableCmds.put("SpinOrMove", new ModifiableCmd("Spin or Move?", moveOptions));
+        
+        modifiableCmds.forEach((k, v) -> {
+            NamedCommands.registerCommand(k, v);
+        });
         for (File autoFile: autosDirectory.listFiles()){
             String autoName = autoFile.getName().replaceFirst("[.][^.]+$", "");
             autoPathChooser.addDefaultOption(autoName, new PathPlannerAuto(autoName));
@@ -107,7 +118,7 @@ public class CatzAutonomous {
     public void updateQuestionaire(){
         try {
             String autoName = autoPathChooser.get().getName() + ".auto";
-            JSONObject json = (JSONObject) parser.parse(new FileReader(Filesystem.getDeployDirectory()+"/pathplanner/autos/"+autoName));
+            JSONObject json = (JSONObject) parser.parse(new FileReader(Filesystem.getDeployDirectory()+"/pathplanner/autos/" + autoName));
 
             if (!autoName.equals(lastAutoName)){
                 lastAutoName = autoName;

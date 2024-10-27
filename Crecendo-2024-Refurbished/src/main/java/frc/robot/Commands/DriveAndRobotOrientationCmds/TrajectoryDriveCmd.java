@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.CatzConstants;
+import frc.robot.Robot;
 import frc.robot.CatzConstants.AllianceColor;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.CatzRobotTracker;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain.CatzDrivetrain;
@@ -48,17 +49,6 @@ public class TrajectoryDriveCmd extends Command {
     private boolean atTarget = false;
     public static double pathTimeOut = -999.0;
 
-
-    //Command inside trajectory helper variables
-    private List<Double> waypointsRatios = Arrays.asList();
-    private List<Command> m_commands     = Arrays.asList();
-    private int numConsecutiveWaypointCounter = 0;
-    private double scaledWaypointTime = 0.0;
-    private Command cmd = new InstantCommand();
-
-
-    private boolean executing = false;
-    private boolean done = false;
 
     //Constructor Logger
     private int m_constructorLogger = 1; // For determining if the command is auto path find or autonomous
@@ -101,9 +91,10 @@ public class TrajectoryDriveCmd extends Command {
             usePath = path.flipPath();
         }
 
-        if(DriverStation.isAutonomous()) {
+        if(!Robot.isResetPositionUsedInAuto && DriverStation.isAutonomous()) {
             CatzRobotTracker.getInstance().resetPosition(usePath.getPreviewStartingHolonomicPose());
         }
+
         this.trajectory = new PathPlannerTrajectory(
             usePath, 
             DriveConstants.
@@ -143,8 +134,8 @@ public class TrajectoryDriveCmd extends Command {
     
             //construct chassisspeeds
             ChassisSpeeds adjustedSpeeds = hocontroller.calculate(currentPose, state, targetOrientation);
-            // System.out.println(adjustedSpeeds.vxMetersPerSecond);
             //send to drivetrain
+
             m_driveTrain.drive(adjustedSpeeds);
             CatzRobotTracker.getInstance().addTrajectorySetpointData(goal.getTargetHolonomicPose());
 
@@ -154,35 +145,6 @@ public class TrajectoryDriveCmd extends Command {
         }else{
             m_driveTrain.stopDriving();
         }
-
-
-        // Command Executer
-        if(!waypointsRatios.isEmpty()) {
-            if(numConsecutiveWaypointCounter < waypointsRatios.size()) {
-                scaledWaypointTime = waypointsRatios.get(numConsecutiveWaypointCounter);  
-                cmd = m_commands.get(numConsecutiveWaypointCounter);   
-                if(executing == false) {
-                    if(currentTime > scaledWaypointTime){
-                        executing = true;
-                        cmd.initialize();
-                        System.out.println(scaledWaypointTime);
-
-                    }
-                }
-            
-
-                if(executing) {
-                    m_commands.get(numConsecutiveWaypointCounter).execute();
-                    if(cmd.isFinished() || (currentTime >= scaledWaypointTime + 2.0)){
-                        done = true;
-                        cmd.end(true);
-                        executing = false;
-                        numConsecutiveWaypointCounter++;
-                    }
-                }
-            }
-        }
-
 
 
     }

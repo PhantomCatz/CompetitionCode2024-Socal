@@ -8,10 +8,13 @@ import edu.wpi.first.wpilibj2.command.Command;
 public class ModifiableCmd extends Command{
     private String question;
     private SendableChooser<Command> chooser = new SendableChooser<>();
+    private Command selectedCommand;
 
     public ModifiableCmd(String question, HashMap<String, Command> options){
         options.forEach((k,v) -> {
-            chooser.addOption(k,v);
+            //This code will make it so that the last item is the default option.
+            //I wrote this just in case the driver forgot to select an option.
+            chooser.setDefaultOption(k,v);
         });
         
         this.question = question;
@@ -26,21 +29,23 @@ public class ModifiableCmd extends Command{
 
     @Override
     public void initialize(){
-        chooser.getSelected().initialize();
+        // selectedCommand = chooser.getSelected();
+        chooser.getSelected().schedule();
     }
 
-    @Override
-    public void execute(){
-        chooser.getSelected().execute();
-    }
+    // @Override
+    // public void execute(){
+    //     //the error has to do with how this modifiable command is being run inside auto periodic??
+    //     // selectedCommand.execute();
+    // }
 
-    @Override
-    public boolean isFinished(){
-        return chooser.getSelected().isFinished();
-    }
+    // @Override
+    // public boolean isFinished(){
+    //     return selectedCommand.isFinished();
+    // }
 
-    @Override
-    public void end(boolean interrupted){
-        chooser.getSelected().end(interrupted);
-    }
+    // @Override
+    // public void end(boolean interrupted){
+    //     selectedCommand.end(interrupted);
+    // }
 }
