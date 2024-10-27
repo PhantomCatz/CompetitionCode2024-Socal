@@ -17,13 +17,17 @@ import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Autonomous.CatzAutonomous;
+import frc.robot.Autonomous.CatzAutonomous;
 import frc.robot.CatzConstants.AllianceColor;
 import frc.robot.CatzConstants.RobotSenario;
+import frc.robot.CatzConstants.XboxInterfaceConstants;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.CatzRobotTracker;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain.CatzDrivetrain;
+import frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain.DriveConstants;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.vision.CatzVision;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.vision.VisionIO;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.vision.VisionIOLimeLight;
@@ -38,15 +42,20 @@ import frc.robot.CatzSubsystems.SuperSubsystem.Elevator.CatzElevator.ElevatorPos
 import frc.robot.CatzSubsystems.SuperSubsystem.IntakePivot.CatzIntakePivot;
 import frc.robot.CatzSubsystems.SuperSubsystem.IntakePivot.CatzIntakePivot.IntakePivotPosition;
 import frc.robot.CatzSubsystems.SuperSubsystem.ShooterPivot.CatzShooterPivot;
+import frc.robot.CatzSubsystems.SuperSubsystem.ShooterPivot.CatzShooterPivot.ShooterPivotPositionType;
 import frc.robot.CatzSubsystems.SuperSubsystem.ShooterTurret.CatzShooterTurret;
 import frc.robot.Commands.AutomatedSequenceCmds;
+import frc.robot.Commands.ControllerModeAbstraction;
 import frc.robot.Commands.DriveAndRobotOrientationCmds.FaceTarget;
 import frc.robot.Commands.DriveAndRobotOrientationCmds.TeleopDriveCmd;
 import frc.robot.Commands.DriveAndRobotOrientationCmds.TrajectoryDriveCmd;
 import frc.robot.Utilities.Alert;
+import frc.robot.Utilities.AllianceFlipUtil;
 import frc.robot.Utilities.Alert.AlertType;
 
 public class RobotContainer {
+
+  public static boolean updateLimelight = true;
 
   // Subsystem Declaration
   private static CatzDrivetrain   drive                = new CatzDrivetrain();
@@ -80,9 +89,12 @@ public class RobotContainer {
   private final LoggedDashboardNumber endgameAlert2 = new LoggedDashboardNumber("Endgame Alert #2", 15.0);
 
   // Auto Declaration
+  private AutomatedSequenceCmds autosequence = new AutomatedSequenceCmds();
   private CatzAutonomous auto = new CatzAutonomous(this);
 
   public RobotContainer() {
+
+    NamedCommands.registerCommand("PrintCMD", Commands.print("HI")); // TODO these comands are broken
 
     // Drive And Aux Command Mapping
     configureBindings();
@@ -119,23 +131,45 @@ public class RobotContainer {
   //
   //---------------------------------------------------------------------------
   private void configureBindings() { // TODO organize by function
-  
+    
+    /* XBOX AUX */
+    xboxAux.povRight().onTrue(ControllerModeAbstraction.sortModes(true)); // speaker
+    xboxAux.povLeft().onTrue(ControllerModeAbstraction.sortModes(false)); // amp
+    xboxAux.rightTrigger().onTrue(ControllerModeAbstraction.cancelController(this));    
+
+    xboxAux.y().onTrue(ControllerModeAbstraction.robotHandoff(this)); // Handoff between shooter and intake
+    xboxAux.a().onTrue(superstructure.setSuperStructureState(SuperstructureState.STOW)); // ResetPosition
+    xboxAux.x().onTrue(ControllerModeAbstraction.robotScore(this, ()->xboxAux.b().getAsBoolean()));  // Score // Override
+    xboxAux.back().onTrue(ControllerModeAbstraction.robotScoreSubwoofer(this, ()->xboxAux.b().getAsBoolean()));
+
+    Trigger leftYTrigger = new Trigger(()->(xboxAux.getLeftY() > XboxInterfaceConstants.kDeadband)); // Manual ShooterPivot
+    leftYTrigger.onTrue(superstructure.setShooterPivotManualPower(()->-xboxAux.getLeftY()));
+
+    Trigger rightYTrigger = new Trigger(()->(xboxAux.getRightX() > XboxInterfaceConstants.kDeadband)); // Manual Turret
+    rightYTrigger.onTrue(superstructure.setTurretManual(()->-xboxAux.getRightX()));
+    
     xboxAux.rightBumper().whileTrue(rollers.setRollersIn());
-    xboxAux.leftBumper().whileTrue(rollers.setRollersOut());
 
-    // xboxAux.y().onTrue(superstructure.deployIntake());
-    // xboxAux.leftTrigger().onTrue(superstructure.deployIntake());
-    xboxAux.y().onTrue(superstructure.moveTurretToHome());
+    xboxAux.leftBumper().onTrue(rollers.setRollersOut().withTimeout(0.3)
+                                                       .andThen(superstructure.setSuperStructureState(SuperstructureState.SCORE_AMP_PART_2)));
+                                                      //  .unless(()->!superstructure.isPreviousSuperSubsystemStateScoreAmp()))
+                                                      //   );
+    xboxAux.leftBumper().and(xboxAux.rightBumper()).whileTrue(rollers.setRollersOff());
 
-    xboxAux.a().onTrue(superstructure.setSuperStructureState(SuperstructureState.STOW));
-    xboxAux.x().onTrue(superstructure.setSuperStructureState(SuperstructureState.INTAKE_GROUND));
-    xboxAux.b().onTrue(superstructure.setSuperStructureState(SuperstructureState.SCORE_AMP));
 
-    xboxDrv.b().onTrue(new FaceTarget(new Translation2d(0, 0), drive));
+    /* XBOX DRIVE */
+    xboxDrv.leftStick().onTrue(ControllerModeAbstraction.robotIntake(this));
+    xboxDrv.rightTrigger().onTrue(ControllerModeAbstraction.cancelController(this));
+    xboxDrv.start().onTrue(drive.cancelTrajectory());
 
-    xboxDrv.y().onTrue(auto.autoFindPathSpeakerLOT());
+    // Auto Driving
+    xboxDrv.y().onTrue(new FaceTarget(FieldConstants.Speaker.centerSpeakerOpening.toTranslation2d(), drive));
+    xboxDrv.b().onTrue(auto.autoFindPathAmp());
+    xboxDrv.x().onTrue(auto.autoFindPathSpeaker());
+    xboxDrv.a().onTrue(superstructure.setSuperStructureState(SuperstructureState.STOW));
 
-    xboxDrv.leftStick().onTrue(drive.cancelTrajectory());
+
+    
     drive.setDefaultCommand(new TeleopDriveCmd(() -> xboxDrv.getLeftX(), 
                                                () -> xboxDrv.getLeftY(), 
                                                () -> xboxDrv.getRightX(), drive));

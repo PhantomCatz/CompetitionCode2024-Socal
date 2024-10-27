@@ -1,5 +1,6 @@
 package frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain;
 
+import com.google.flatbuffers.Constants;
 import com.pathplanner.lib.path.PathConstraints;
 
 import edu.wpi.first.math.controller.HolonomicDriveController;
@@ -88,6 +89,13 @@ public class DriveConstants {
                     Mk4iReductions.L2_PLUS.reduction,
                     Mk4iReductions.steer.reduction);
         };
+    // Odometry Constants
+    public static final double odometryFrequency =
+        switch (CatzConstants.getRobotType()) {
+            case SN_TEST -> 50.0;
+            case SN1 -> 100.0;
+            case SN2 -> 250.0;
+        };
 
     // Logged Tunable PIDF values for swerve modules
     public static final LoggedTunableNumber drivekP = new LoggedTunableNumber("Drive/Module/DrivekP", moduleGainsAndRatios.drivekP());
@@ -101,26 +109,27 @@ public class DriveConstants {
         switch (CatzConstants.getRobotType()) {
             case SN2 ->
                 new ModuleConfig[] {
-                    new ModuleConfig(1, 2, 9, 0.228031255+0.5, true),
-                    new ModuleConfig(3, 4, 8, 0.733477518+0.5, true),
-                    new ModuleConfig(5, 6, 7, 1.1043222, true),
-                    new ModuleConfig(7, 8, 6, 0.3417887, true)
+                    new ModuleConfig(1, 2, 9, 0.228031255+0.5),
+                    new ModuleConfig(3, 4, 8, 0.733477518+0.5),
+                    new ModuleConfig(5, 6, 7, 1.1043222),
+                    new ModuleConfig(7, 8, 6, 0.3417887)
                 };
             case SN1 ->
                 new ModuleConfig[] {
-                    new ModuleConfig(1, 2, 9, 1.2307227057, true),
-                    new ModuleConfig(3, 4, 8, 0.24567763114+0.5, true),
-                    new ModuleConfig(5, 6, 7, -0.1892973047, true),
-                    new ModuleConfig(7, 8, 6, 0.010002000, true)
+                    new ModuleConfig(1, 2, 9, 1.2307227057),
+                    new ModuleConfig(3, 4, 8, 0.24567763114+0.5),
+                    new ModuleConfig(5, 6, 7, -0.1892973047),
+                    new ModuleConfig(7, 8, 6, 0.010002000)
                 };
             case SN_TEST -> 
                 new ModuleConfig[] {
-                    new ModuleConfig(1, 2, 9, 0.0, true),
-                    new ModuleConfig(3, 4, 8, 0.0, true),
-                    new ModuleConfig(5, 6, 7, 0.0, true),
-                    new ModuleConfig(7, 8, 6, 0.0, true)
+                    new ModuleConfig(1, 2, 9, 0.0),
+                    new ModuleConfig(3, 4, 8, 0.0),
+                    new ModuleConfig(5, 6, 7, 0.0),
+                    new ModuleConfig(7, 8, 6, 0.0)
                 };
         };
+    public static final int GYRO_ID = 0;
 
     //-----------------------------------------------------------------------------------------------------------------------------
     //
@@ -128,7 +137,7 @@ public class DriveConstants {
     //
     //-----------------------------------------------------------------------------------------------------------------------------
     public static final PathConstraints autoPathfindingConstraints = new PathConstraints( // 540 // 720 
-                                                                    driveConfig.maxLinearVelocity, driveConfig.maxLinearAcceleration, 
+                                                                    1.0, driveConfig.maxLinearAcceleration, 
                                                                     driveConfig.maxAngularVelocity, driveConfig.maxAngularAcceleration);
 
 
@@ -164,8 +173,7 @@ public class DriveConstants {
         int driveID,
         int steerID,
         int absoluteEncoderChannel,
-        double absoluteEncoderOffset,
-        boolean steerMotorInverted) {}
+        double absoluteEncoderOffset) {}
 
     public record ModuleGainsAndRatios(
         double driveFFkS,

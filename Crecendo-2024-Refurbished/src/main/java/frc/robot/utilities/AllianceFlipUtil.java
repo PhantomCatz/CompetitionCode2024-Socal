@@ -7,17 +7,13 @@
 
 package frc.robot.Utilities;
 
-import com.pathplanner.lib.path.PathPlannerPath;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import frc.robot.CatzConstants;
 import frc.robot.FieldConstants;
-import frc.robot.CatzConstants.AllianceColor;
 
 /** Utility functions for flipping from the blue to red alliance. */
 public class AllianceFlipUtil {
@@ -33,7 +29,7 @@ public class AllianceFlipUtil {
   /** Flips an x coordinate to the correct side of the field based on the current alliance color. */
   public static double apply(double xCoordinate) {
     if (shouldFlipToRed()) {
-      return FieldConstants.FIELD_LENGTH_MTRS - xCoordinate;
+      return (FieldConstants.FIELD_LENGTH_MTRS - xCoordinate);
     } else {
       return xCoordinate;
     }

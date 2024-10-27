@@ -30,11 +30,11 @@ import edu.wpi.first.math.util.Units;
 
     public static final double SPEAKER_COORD_MTRS_Y = Units.inchesToMeters(219.277);
     public static final double HOARD_LOCATION_Y = Units.inchesToMeters(219.277) + 2.0;
-    public static double FIELD_LENGTH_MTRS = Units.inchesToMeters(651.223);
-    public static double fieldWidth = Units.inchesToMeters(323.277);
-    public static double wingX = Units.inchesToMeters(229.201);
-    public static double podiumX = Units.inchesToMeters(126.75);
-    public static double startingLineX = Units.inchesToMeters(74.111);
+    public static final double FIELD_LENGTH_MTRS = Units.inchesToMeters(651.223);
+    public static final double fieldWidth = Units.inchesToMeters(323.277);
+    public static final double wingX = Units.inchesToMeters(229.201);
+    public static final double podiumX = Units.inchesToMeters(126.75);
+    public static final double startingLineX = Units.inchesToMeters(74.111);
 
     public static final int BLUE_SPEAKER_APRILTAG = 7;
     public static final int RED_SPEAKER_APRILTAG  = 4;

@@ -2,6 +2,8 @@ package frc.robot.CatzSubsystems.SuperSubsystem.ShooterPivot;
 
 import static frc.robot.CatzSubsystems.SuperSubsystem.ShooterPivot.ShooterPivotConstants.*;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -11,80 +13,47 @@ import com.ctre.phoenix6.controls.*;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkBase.IdleMode;
+import com.revrobotics.CANSparkLowLevel.MotorType;
+import com.revrobotics.CANSparkLowLevel.PeriodicFrame;
+import com.revrobotics.SparkRelativeEncoder.Type;
+
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.motorcontrol.Talon;
+import frc.robot.CatzConstants;
+import frc.robot.CatzSubsystems.SuperSubsystem.ShooterTurret.TurretConstants;
 
 public class ShooterPivotIOReal implements ShooterPivotIO {
 
     // Hardware
-    private final TalonFX elevationTalon;
-
-    // Status Signals
-    private final StatusSignal<Double> position;
-    private final StatusSignal<Double> velocity;
-    private final StatusSignal<Double> appliedVolts;
-    private final StatusSignal<Double> supplyCurrent;
-    private final StatusSignal<Double> torqueCurrent;
-    private final StatusSignal<Double> tempCelsius;
+    private final CANSparkMax elevationNeoMtr;
 
     // Control
-    private final VoltageOut voltageControl = new VoltageOut(0).withUpdateFreqHz(0.0);
-    private final MotionMagicVoltage positionControl = new MotionMagicVoltage(0.0).withUpdateFreqHz(0.0);
-    private final NeutralOut neutralControl = new NeutralOut().withUpdateFreqHz(0.0);
-    private final TalonFXConfiguration config = new TalonFXConfiguration();
+    private PIDController shooterPivotFeedback = new PIDController(gains.kP(), gains.kI(), gains.kD(), CatzConstants.LOOP_TIME);
 
     public ShooterPivotIOReal() {
-        elevationTalon = new TalonFX(0);
+        elevationNeoMtr = new CANSparkMax(61, MotorType.kBrushless);
 
-        // General Talon Config
-        config.CurrentLimits.SupplyCurrentLimit = 60.0;
-        config.CurrentLimits.SupplyCurrentLimitEnable = true;
-        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        config.Feedback.SensorToMechanismRatio = 0.0;
+        elevationNeoMtr.restoreFactoryDefaults();
+        elevationNeoMtr.setSmartCurrentLimit(30);
+        elevationNeoMtr.setIdleMode(IdleMode.kBrake);
+        elevationNeoMtr.enableVoltageCompensation(12.0);
+        elevationNeoMtr.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 32767);
+        elevationNeoMtr.getEncoder().setPosition(33.95); //Starting position in relation to hardstopz
 
-        // PIDF Talon config
-        config.Slot0.kP = gains.kP();
-        config.Slot0.kI = gains.kI();
-        config.Slot0.kD = gains.kD();
-        config.Slot0.kS = gains.kS();
-        config.Slot0.kV = gains.kV();
-        config.Slot0.kA = gains.kA();
-
-        // Assign signals
-        position = elevationTalon.getPosition();
-        velocity = elevationTalon.getVelocity();
-        appliedVolts = elevationTalon.getMotorVoltage();
-        supplyCurrent = elevationTalon.getSupplyCurrent();
-        torqueCurrent = elevationTalon.getTorqueCurrent();
-        tempCelsius = elevationTalon.getDeviceTemp();
-
-        BaseStatusSignal.setUpdateFrequencyForAll(
-            100.0,
-            position,
-            velocity,
-            appliedVolts,
-            supplyCurrent,
-            torqueCurrent,
-            tempCelsius
-        );
+        elevationNeoMtr.burnFlash();
     }
 
+    @Override
     public void updateInputs(ShooterPivotIOInputs inputs) {
-        inputs.isElevationMotorConnected =
-            BaseStatusSignal.refreshAll(
-                    position,
-                    velocity,
-                    appliedVolts,
-                    supplyCurrent,
-                    torqueCurrent,
-                    tempCelsius)
-                .isOK();
-        inputs.positionDegrees = Units.rotationsToDegrees(position.getValue());
-        inputs.velocityRpm = velocity.getValue() * 60.0;
-        inputs.appliedVolts = appliedVolts.getValue();
-        inputs.supplyCurrentAmps = supplyCurrent.getValue();
-        inputs.torqueCurrentAmps = torqueCurrent.getValue();
-        inputs.tempCelcius = tempCelsius.getValue();
+
+        inputs.positionTicks = elevationNeoMtr.getEncoder().getPosition();
+        inputs.appliedVolts = elevationNeoMtr.getBusVoltage();
+        inputs.tempCelcius = elevationNeoMtr.getMotorTemperature();
+
+        // System.out.println("pivot: " + inputs.positionTicks);
     }
 
     //-----------------------------------------------------------------------------------------
@@ -93,52 +62,26 @@ public class ShooterPivotIOReal implements ShooterPivotIO {
     //
     //-----------------------------------------------------------------------------------------
     @Override
-    public void runMotionMagicSetpoint(double setpoint) {
-      elevationTalon.setControl(
-          positionControl
-              .withPosition(Units.degreesToRotations(setpoint))
-      );
+    public void runSetpointTicks(double currentPositionTicks,double setpointTicks) {
+        double percentOutput = shooterPivotFeedback.calculate(currentPositionTicks, setpointTicks);
+        elevationNeoMtr.set(percentOutput);
+        Logger.recordOutput("shooterPivot/PercentOutput", percentOutput);
+        Logger.recordOutput("shooterPivot/currentPositionTicks", currentPositionTicks);
+        Logger.recordOutput("shooterPivot/setpointTicks", setpointTicks);
     }
   
     @Override
-    public void runVolts(double volts) {
-      elevationTalon.setControl(voltageControl.withOutput(volts));
+    public void runPercentOutput(double percentOutput) {
+      elevationNeoMtr.set(percentOutput);
     }
 
+    @Override
+    public void setPID(double p, double i, double d) {
+      shooterPivotFeedback = new PIDController(p, i, d, CatzConstants.LOOP_TIME);
+    }
   
     @Override
     public void stop() {
-      elevationTalon.setControl(new NeutralOut());
-    }
-  
-    //-----------------------------------------------------------------------------------------
-    //
-    //    Pivot Misc
-    //
-    //-----------------------------------------------------------------------------------------
-    @Override
-    public void setPID(double kP, double kI, double kD) {
-        config.Slot0.kP = kP;
-        config.Slot0.kI = kI;
-        config.Slot0.kD = kD;
-        elevationTalon.getConfigurator().apply(config);
-    }
-
-    @Override
-    public void setMotionMagicParameters(double cruiseVelocity, double acceleration, double jerk) {
-      config.MotionMagic.MotionMagicCruiseVelocity = cruiseVelocity;
-      config.MotionMagic.MotionMagicAcceleration   = acceleration;
-      config.MotionMagic.MotionMagicJerk           = jerk;
-      elevationTalon.getConfigurator().apply(config, 0.01);
-    }
-
-    @Override
-    public void runCharacterization(double input) {
-        elevationTalon.setControl(voltageControl.withOutput(input));
-    }
-
-    @Override
-    public void setNeutralMode(NeutralModeValue mode) {
-        elevationTalon.setNeutralMode(mode);
+      elevationNeoMtr.set(0);
     }
 }

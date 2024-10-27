@@ -177,6 +177,7 @@ public class CatzDrivetrain extends SubsystemBase {
                 ? Math.toRadians(gyroInputs.gyroAngleVel)
                 : robotRelativeVelocity.dtheta;
         CatzRobotTracker.getInstance().addVelocityData(robotRelativeVelocity);
+
    
        
         // Logging
@@ -190,9 +191,10 @@ public class CatzDrivetrain extends SubsystemBase {
     //
     //--------------------------------------------------------------------------------------------------------------------------
     /** chassis speeds input w/ or w/o any correction for drift */
-    public void drive(ChassisSpeeds chassisSpeeds) {
-        chassisSpeeds = ChassisSpeeds.discretize(chassisSpeeds, 0.02);
-        Logger.recordOutput("TargetChassisSpeeds", chassisSpeeds);
+    public void drive(ChassisSpeeds chassisSpeeds, boolean isDiscretizeEnabled) {
+        if(isDiscretizeEnabled) {
+            chassisSpeeds = ChassisSpeeds.discretize(chassisSpeeds, 0.02);
+        }
         // Convert chassis speeds to individual module states and set module states
         SwerveModuleState[] moduleStates = DriveConstants.swerveDriveKinematics.toSwerveModuleStates(chassisSpeeds);
 
@@ -234,7 +236,7 @@ public class CatzDrivetrain extends SubsystemBase {
 
     /** Runs forwards at the commanded voltage or amps. */
     public void runCharacterization(double input) {
-        drive(new ChassisSpeeds(0.0, 0.0, input));
+        drive(new ChassisSpeeds(0.0, 0.0, input), false);
     }
 
     //-----------------------------------------------------------------------------------------------------------
@@ -326,7 +328,7 @@ public class CatzDrivetrain extends SubsystemBase {
      * @return The Heading of the robot dependant on where it's been instantiated
      */
     private double getGyroHeading() {
-        return -gyroInputs.gyroYawDegrees; // Negative on Forte due to instalation, gyro's left is not robot left
+        return -gyroInputs.gyroAngle; // Negative on Forte due to instalation, gyro's left is not robot left
     }
 
     /** Get the Rotation2d object based on the gyro angle */

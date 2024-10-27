@@ -26,7 +26,7 @@ public class TurretIOReal implements TurretIO{
         turretNeo.setSmartCurrentLimit(30);
         turretNeo.setIdleMode(IdleMode.kBrake);
         turretNeo.enableVoltageCompensation(12.0);
-        turretNeo.getEncoder().setPositionConversionFactor(1/TURRET_GEAR_REDUCTION); //TODO
+        turretNeo.getEncoder().setPositionConversionFactor((1/TURRET_GEAR_REDUCTION) * 360); //TODO
         turretNeo.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 32767);
 
         turretNeo.enableSoftLimit(SoftLimitDirection.kForward, true);
@@ -43,7 +43,7 @@ public class TurretIOReal implements TurretIO{
     public void updateInputs(TurretIOInputs inputs) {
         inputs.velocityRps             = turretNeo.getEncoder().getVelocity()/60; // In rotations of Output shaft
         inputs.appliedVolts            = turretNeo.getBusVoltage();
-        inputs.positionDegrees         = turretNeo.getEncoder().getPosition()*5*180/Math.PI;
+        inputs.positionDegrees         = (turretNeo.getEncoder().getPosition());
         inputs.tempCelsius             = turretNeo.getMotorTemperature();
 
     }

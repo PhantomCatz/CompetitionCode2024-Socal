@@ -2,6 +2,8 @@ package frc.robot.CatzSubsystems.IntakeRollers;
 
 import static frc.robot.CatzSubsystems.IntakeRollers.IntakeRollersConstants.*;
 
+import edu.wpi.first.wpilibj.DigitalInput;
+
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -17,6 +19,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 public class IntakeRollersIOReal implements IntakeRollersIO {
     // Hardware
     private final TalonFX rollerTalon;
+    private final DigitalInput frontBeamBreak;
 
     // Status Signals
     private final StatusSignal<Double> rollerVelocity;
@@ -33,6 +36,7 @@ public class IntakeRollersIOReal implements IntakeRollersIO {
     private final DutyCycleOut dudtyCycleControl = new DutyCycleOut(0.0).withUpdateFreqHz(60.0);
 
     public IntakeRollersIOReal() {
+        frontBeamBreak = new DigitalInput(FRONT_BEAM_BREAK);
         rollerTalon = new TalonFX(INTAKE_ROLLER_ID);
 
         // General config
@@ -82,6 +86,8 @@ public class IntakeRollersIOReal implements IntakeRollersIO {
         inputs.rollerSupplyCurrentAmps = rollerSupplyCurrent.getValueAsDouble();
         inputs.rollerTorqueCurrentAmps = rollerTorqueCurrent.getValueAsDouble();
         inputs.rollerTempCelsius = rollerTempCelsius.getValueAsDouble();
+
+        inputs.isFrontBeambreakBroken = !frontBeamBreak.get();
     }
 
     /** Run motors at volts */
@@ -101,5 +107,8 @@ public class IntakeRollersIOReal implements IntakeRollersIO {
     public void stop() {
         rollerTalon.setControl(neutralControl);
     }
+
+    /** BEAM BREAK */
+
     
 }

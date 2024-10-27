@@ -10,7 +10,7 @@ public interface GyroIO {
     public double gyroRollDegrees;
     public double gyroPitch;
     public boolean gyroConnected;
-    public double gyroAngleVel;
+    public double gyroYawVel;
     public double gyroAccelX;
     public double gyroAccelY;
   }
