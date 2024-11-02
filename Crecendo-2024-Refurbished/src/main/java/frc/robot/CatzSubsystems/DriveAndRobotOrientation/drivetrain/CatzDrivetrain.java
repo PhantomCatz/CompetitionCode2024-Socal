@@ -165,7 +165,7 @@ public class CatzDrivetrain extends SubsystemBase {
                                     wheelPositions, 
                                     gyroAngle2d, 
                                     getModuleStates(), 
-                                    gyroInputs.gyroAngleVel, 
+                                    gyroInputs.gyroYawVel, 
                                     gyroInputs.gyroAccelX, 
                                     gyroInputs.gyroAccelY)
                             );
@@ -174,7 +174,7 @@ public class CatzDrivetrain extends SubsystemBase {
         Twist2d robotRelativeVelocity = getTwist2dSpeeds();
         robotRelativeVelocity.dtheta =
             gyroInputs.gyroConnected
-                ? Math.toRadians(gyroInputs.gyroAngleVel)
+                ? Math.toRadians(gyroInputs.gyroYawVel)
                 : robotRelativeVelocity.dtheta;
         CatzRobotTracker.getInstance().addVelocityData(robotRelativeVelocity);
 
@@ -191,10 +191,8 @@ public class CatzDrivetrain extends SubsystemBase {
     //
     //--------------------------------------------------------------------------------------------------------------------------
     /** chassis speeds input w/ or w/o any correction for drift */
-    public void drive(ChassisSpeeds chassisSpeeds, boolean isDiscretizeEnabled) {
-        if(isDiscretizeEnabled) {
-            chassisSpeeds = ChassisSpeeds.discretize(chassisSpeeds, 0.02);
-        }
+    public void drive(ChassisSpeeds chassisSpeeds) {
+        chassisSpeeds = ChassisSpeeds.discretize(chassisSpeeds, 0.02);
         // Convert chassis speeds to individual module states and set module states
         SwerveModuleState[] moduleStates = DriveConstants.swerveDriveKinematics.toSwerveModuleStates(chassisSpeeds);
 
@@ -236,7 +234,7 @@ public class CatzDrivetrain extends SubsystemBase {
 
     /** Runs forwards at the commanded voltage or amps. */
     public void runCharacterization(double input) {
-        drive(new ChassisSpeeds(0.0, 0.0, input), false);
+        drive(new ChassisSpeeds(0.0, 0.0, input));
     }
 
     //-----------------------------------------------------------------------------------------------------------

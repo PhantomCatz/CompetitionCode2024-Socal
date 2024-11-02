@@ -330,11 +330,8 @@ public class Robot extends LoggedRobot {
         }
       }
     }
-<<<<<<< HEAD
     m_robotContainer.getCatzAutonomous().updateQuestionaire();
-=======
     CatzRobotTracker.getInstance().getAutoAimSpeakerParemeters();
->>>>>>> f6bd68dc54f94c6bdbccd0e072649f541afb119a
   }
   
   @Override

@@ -20,15 +20,9 @@ public final class CatzConstants {
   //  Robot Modes
   //
   //--------------------------------------------------/
-<<<<<<< HEAD
   public static final RobotSenario robotSenario = RobotSenario.TUNING;
   public static final RobotHardwareMode hardwareMode = RobotHardwareMode.SIM;
   private static RobotID robotType = RobotID.SN_TEST;
-=======
-  public static final RobotSenario robotSenario = RobotSenario.PRACTICE;
-  public static final RobotHardwareMode hardwareMode = RobotHardwareMode.REPLAY;
-  private static RobotID robotType = RobotID.SN2;
->>>>>>> f6bd68dc54f94c6bdbccd0e072649f541afb119a
   
   public static final double LOOP_TIME = 0.02;
 

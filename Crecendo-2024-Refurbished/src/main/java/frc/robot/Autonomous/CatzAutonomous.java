@@ -81,6 +81,18 @@ public class CatzAutonomous {
             container.getCatzDrivetrain()
         );
 
+<<<<<<< Updated upstream
+=======
+        // ORDER MATTERS! Register named commands first, configure questionairre second, and add autos to dashboard last
+        for(File pathFile : pathsDirectory.listFiles()){
+            //to get rid of the extensions trailing the path names
+            String pathName = pathFile.getName().replaceFirst("[.][^.]+$", ""); 
+            PathPlannerPath path = PathPlannerPath.fromChoreoTrajectory(pathName);
+            NamedCommands.registerCommand(pathName, new TrajectoryDriveCmd(path, container.getCatzDrivetrain()));
+        }
+
+        // Questionaire configuration
+>>>>>>> Stashed changes
         HashMap<String, Command> scoringPositions = new HashMap<>();
         scoringPositions.put("High", new PrintCommand("High"));
         scoringPositions.put("Mid", new PrintCommand("Mid"));
@@ -89,6 +101,7 @@ public class CatzAutonomous {
         modifiableCmds.put("Score2", new ModifiableCmd("Scoring Position 2?", scoringPositions));
         modifiableCmds.put("Score3", new ModifiableCmd("Scoring Position 3?", scoringPositions));
 
+<<<<<<< Updated upstream
         modifiableCmds.forEach((k, v) -> {
             NamedCommands.registerCommand(k, v);
         });
@@ -98,6 +111,16 @@ public class CatzAutonomous {
             PathPlannerPath path = PathPlannerPath.fromChoreoTrajectory(pathName);
             NamedCommands.registerCommand(pathName, new TrajectoryDriveCmd(path, container.getCatzDrivetrain()));
         }
+=======
+        HashMap<String, Command> moveOptions = new HashMap<>();
+        moveOptions.put("Spin", NamedCommands.getCommand("TurnStraight"));
+        moveOptions.put("Move", NamedCommands.getCommand("DriveStraight"));
+        modifiableCmds.put("SpinOrMove", new ModifiableCmd("Spin or Move?", moveOptions));
+
+        modifiableCmds.forEach((k, v) -> {
+            NamedCommands.registerCommand(k, v);
+        });
+>>>>>>> Stashed changes
         for (File autoFile: autosDirectory.listFiles()){
             String autoName = autoFile.getName().replaceFirst("[.][^.]+$", "");
             autoPathChooser.addDefaultOption(autoName, new PathPlannerAuto(autoName));

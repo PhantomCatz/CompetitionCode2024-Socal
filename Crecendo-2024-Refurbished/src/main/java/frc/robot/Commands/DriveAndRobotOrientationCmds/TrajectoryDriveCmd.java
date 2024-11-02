@@ -113,9 +113,6 @@ public class TrajectoryDriveCmd extends Command {
         );
                                                
         pathTimeOut = trajectory.getTotalTimeSeconds() * TIMEOUT_SCALAR; //TODO do we still need this
-        numConsecutiveWaypointCounter = 0;
-        scaledWaypointTime = 0.0;
-        executing = false;
     }
 
     @Override
