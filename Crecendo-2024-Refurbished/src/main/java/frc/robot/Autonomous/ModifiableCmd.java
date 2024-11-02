@@ -26,26 +26,6 @@ public class ModifiableCmd extends Command{
 
     @Override
     public void initialize(){
-<<<<<<< Updated upstream
-        chooser.getSelected().initialize();
-    }
-
-    @Override
-    public void execute(){
-        chooser.getSelected().execute();
-    }
-
-    @Override
-    public boolean isFinished(){
-        return chooser.getSelected().isFinished();
-    }
-
-    @Override
-    public void end(boolean interrupted){
-        chooser.getSelected().end(interrupted);
-    }
-}
-=======
         chooser.getSelected().schedule();
     }
 
@@ -54,4 +34,3 @@ public class ModifiableCmd extends Command{
         return chooser.getSelected().isFinished();
     }
 }
->>>>>>> Stashed changes

@@ -183,7 +183,7 @@ public class CatzRobotTracker {
     if (observation.gyroAngle != null) {
         //run REAL gyro input collection for pose estimation
         m_currentGyroAngle = observation.gyroAngle;
-        // System.out.println("gyro: " + m_currentGyroAngle);
+        //  System.out.println("gyro: " + m_currentGyroAngle);
         m_currentGyroAngularVelocity = observation.gyroAngularVelocity;
     } else {
         // If gyro is not connected, simulate gyro using wheel position deltas

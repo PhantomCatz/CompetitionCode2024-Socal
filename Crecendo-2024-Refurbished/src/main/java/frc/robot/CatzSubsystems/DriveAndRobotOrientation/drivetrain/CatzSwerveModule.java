@@ -103,7 +103,8 @@ public class CatzSwerveModule {
         Logger.recordOutput("Module " + m_moduleName + "/targetmoduleangle rad", m_swerveModuleState.angle.getRadians());
 
 
-        SmartDashboard.putNumber("absenctorad" + m_moduleName , getAbsEncRadians());
+        SmartDashboard.putNumber("absencposrad" + m_moduleName, inputs.steerAbsoluteEncPosition.getRadians());
+        SmartDashboard.putNumber("absenctorad" + m_moduleName, getAbsEncRadians());
         SmartDashboard.putNumber("angle" + m_moduleName , getCurrentRotation().getDegrees());
     }
 

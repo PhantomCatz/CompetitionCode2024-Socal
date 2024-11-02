@@ -73,8 +73,8 @@ public class DriveConstants {
                     0.0,
                     1.2,
                     0.0,
-                    0.3,
-                    0.0,
+                    0.7,
+                    0.005,
                     Mk4iReductions.L2_PLUS.reduction,
                     Mk4iReductions.steer.reduction);
             case SN_TEST ->
@@ -109,10 +109,10 @@ public class DriveConstants {
         switch (CatzConstants.getRobotType()) {
             case SN2 ->
                 new ModuleConfig[] {
-                    new ModuleConfig(1, 2, 9, 0.228031255+0.5),
-                    new ModuleConfig(3, 4, 8, 0.733477518+0.5),
-                    new ModuleConfig(5, 6, 7, 1.1043222),
-                    new ModuleConfig(7, 8, 6, 0.3417887)
+                    new ModuleConfig(1, 2, 9, 1.4196464857/Math.PI/2+0.5),
+                    new ModuleConfig(3, 4, 8, 4.6208462275/Math.PI/2+0.5),
+                    new ModuleConfig(5, 6, 7, 0.6691969510/Math.PI/2),
+                    new ModuleConfig(7, 8, 6, 2.0568857418/Math.PI/2)
                 };
             case SN1 ->
                 new ModuleConfig[] {
