@@ -100,10 +100,10 @@ public class CatzSwerveModule {
         Logger.recordOutput("Module " + m_moduleName + "/current state", getModuleState());
         Logger.recordOutput("Module " + m_moduleName + "/angle error deg", Math.toDegrees(m_swerveModuleState.angle.getRadians()-getAbsEncRadians()));
         Logger.recordOutput("Module " + m_moduleName + "/currentmoduleangle rad", getAbsEncRadians());
-        Logger.recordOutput("Module " + m_moduleName + "/targetmoduleangle rad", m_swerveModuleState.angle.getRadians());
+        //Logger.recordOutput("Module " + m_moduleName + "/targetmoduleangle rad", m_swerveModuleState.angle.getRadians());
 
 
-        SmartDashboard.putNumber("absencposrad" + m_moduleName, inputs.steerAbsoluteEncPosition.getRadians());
+        //SmartDashboard.putNumber("absencposrad" + m_moduleName, inputs.steerAbsoluteEncPosition.getRadians());
         SmartDashboard.putNumber("absenctorad" + m_moduleName, getAbsEncRadians());
         SmartDashboard.putNumber("angle" + m_moduleName , getCurrentRotation().getDegrees());
     }
@@ -113,19 +113,26 @@ public class CatzSwerveModule {
      *
      * @param state Desired state with speed and angle.
      */
-    public void setModuleAngleAndVelocity(SwerveModuleState state) { //TODO log variables actually used in calculations
-
+    public void setModuleAngleAndVelocity(SwerveModuleState state) {
+        //--------------------------------------------------------
+        //colllect variabels used in calculations
+        //--------------------------------------------------------
         this.m_swerveModuleState        = state;
         double targetAngleRads          = state.angle.getRadians();
         double currentAngleRads         = getAbsEncRadians();
 
         Logger.recordOutput("Module/TargetMPS", state.speedMetersPerSecond);
+        
+        //--------------------------------------------------------
         // Run closed loop drive control
+        //--------------------------------------------------------
         io.runDriveVelocityRPSIO(
             Conversions.MPSToRPS(state.speedMetersPerSecond)
         );
-        // Run Closed Loop Steer Control
 
+        //--------------------------------------------------------
+        // Run closed loop steer control
+        //--------------------------------------------------------
         io.runSteerPositionSetpoint(currentAngleRads, targetAngleRads);
     }
 

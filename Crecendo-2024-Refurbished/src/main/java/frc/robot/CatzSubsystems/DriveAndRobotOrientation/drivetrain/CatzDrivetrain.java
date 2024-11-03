@@ -190,16 +190,21 @@ public class CatzDrivetrain extends SubsystemBase {
     //          Driving methods
     //
     //--------------------------------------------------------------------------------------------------------------------------
-    /** chassis speeds input w/ or w/o any correction for drift */
     public void drive(ChassisSpeeds chassisSpeeds) {
         chassisSpeeds = ChassisSpeeds.discretize(chassisSpeeds, 0.02);
+        //--------------------------------------------------------
         // Convert chassis speeds to individual module states and set module states
+        //--------------------------------------------------------
         SwerveModuleState[] moduleStates = DriveConstants.swerveDriveKinematics.toSwerveModuleStates(chassisSpeeds);
 
+        //--------------------------------------------------------
         // Scale down wheel speeds
+        //--------------------------------------------------------
         SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, DriveConstants.driveConfig.maxLinearVelocity());
         
-        // Optimize wheel angles
+        //--------------------------------------------------------
+        // Optimize Wheel Angles
+        //--------------------------------------------------------
         SwerveModuleState[] optimizedDesiredStates = new SwerveModuleState[4];
         for (int i = 0; i < 4; i++) {  
             // The module returns the optimized state, useful for logging

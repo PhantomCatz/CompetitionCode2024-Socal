@@ -41,6 +41,8 @@ import frc.robot.CatzSubsystems.SuperSubsystem.CatzSuperSubsystem;
 import frc.robot.CatzSubsystems.SuperSubsystem.CatzSuperSubsystem.SuperstructureState;
 import frc.robot.Commands.AutomatedSequenceCmds;
 import frc.robot.Commands.CharacterizationCmds.FeedForwardCharacterization;
+import frc.robot.Commands.CharacterizationCmds.WheelRadiusCharacterization;
+import frc.robot.Commands.CharacterizationCmds.WheelRadiusCharacterization.Direction;
 import frc.robot.Commands.DriveAndRobotOrientationCmds.TrajectoryDriveCmd;
 import frc.robot.Commands.DriveAndRobotOrientationCmds.WaitUntilPassX;
 import frc.robot.Utilities.AllianceFlipUtil;
@@ -203,6 +205,6 @@ public class CatzAutonomous {
 
     /** Getter for final autonomous routine */
     public Command getCommand() { 
-        return autoPathChooser.get();
+        return new WheelRadiusCharacterization(m_container.getCatzDrivetrain(), Direction.CLOCKWISE);
     }
 }
