@@ -52,6 +52,8 @@ public final class CatzConstants {
   public static enum RobotID {
     SN1,
     SN2,
+    OVERTIME,
+    ATLAS,
     SN_TEST // Select alternate test robot parameters
   }
 

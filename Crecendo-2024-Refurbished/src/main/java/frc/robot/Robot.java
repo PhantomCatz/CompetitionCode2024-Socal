@@ -39,10 +39,10 @@ import frc.robot.CatzConstants.RobotID;
 import frc.robot.CatzConstants.RobotSenario;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.CatzRobotTracker;
 import frc.robot.CatzSubsystems.LEDs.CatzLED;
-import frc.robot.Commands.ControllerModeAbstraction;
 import frc.robot.Utilities.Alert;
 import frc.robot.Utilities.AllianceFlipUtil;
 import frc.robot.Utilities.Alert.AlertType;
+import lombok.Getter;
 
 public class Robot extends LoggedRobot {
   //-------------------------------------------------------------------------------------------------------------
@@ -69,7 +69,7 @@ public class Robot extends LoggedRobot {
   private double teleStart;
   private double autoStart;
   private boolean autoMessagePrinted;
-  private static double teleElapsedTime = 0.0;
+  @Getter private static double teleElapsedTime = 0.0; 
   // Can Error Detection variables
   private static final double canErrorTimeThreshold = 0.5; // Seconds to disable alert
   private static final double canivoreErrorTimeThreshold = 0.5;
@@ -112,6 +112,10 @@ public class Robot extends LoggedRobot {
   SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd kk.mm.ss");;
   String dateFormatted = sdf.format(date);
   private final Alert lastDeploymentAlert = new Alert("Last Deployment: " + dateFormatted , AlertType.INFO);
+
+
+  // Driver Practice Timers
+  public static final double FIELD_ORIENTATION_MESSUP_START_TIME = 30;
 
 
 
@@ -385,7 +389,10 @@ public class Robot extends LoggedRobot {
   public void teleopPeriodic() {
     teleElapsedTime = Timer.getFPGATimestamp() - teleStart;
 
-    ControllerModeAbstraction.periodicDebug();
+
+    if(teleElapsedTime > 30) {
+      
+    }
   }
 
   @Override

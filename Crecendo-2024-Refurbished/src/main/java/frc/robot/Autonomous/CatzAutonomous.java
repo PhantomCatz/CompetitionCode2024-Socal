@@ -35,11 +35,6 @@ import edu.wpi.first.wpilibj2.command.PrintCommand;
 import frc.robot.RobotContainer;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.CatzRobotTracker;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain.DriveConstants;
-import frc.robot.CatzSubsystems.Shooter.ShooterFeeder.CatzShooterFeeder;
-import frc.robot.CatzSubsystems.Shooter.ShooterFlywheels.CatzShooterFlywheels;
-import frc.robot.CatzSubsystems.SuperSubsystem.CatzSuperSubsystem;
-import frc.robot.CatzSubsystems.SuperSubsystem.CatzSuperSubsystem.SuperstructureState;
-import frc.robot.Commands.AutomatedSequenceCmds;
 import frc.robot.Commands.CharacterizationCmds.FeedForwardCharacterization;
 import frc.robot.Commands.CharacterizationCmds.WheelRadiusCharacterization;
 import frc.robot.Commands.CharacterizationCmds.WheelRadiusCharacterization.Direction;
@@ -154,12 +149,6 @@ public class CatzAutonomous {
     //          Characteration Routines
     //
     //---------------------------------------------------------------------------------------------------------
-    public Command flywheelCharacterization() {
-        CatzShooterFlywheels flywheels = m_container.getCatzShooterFlywheels();
-        return new FeedForwardCharacterization(flywheels, flywheels::runCharacterization, flywheels::getCharacterizationVelocity)
-                        .withName("Flywheels characterization");
-    }
-    
 
     //Automatic pathfinding command
     public Command autoFindPathAmp() {

@@ -28,7 +28,7 @@ public class DriveConstants {
 
     public static final DriveConfig driveConfig =
     switch (CatzConstants.getRobotType()) {
-      case SN_TEST, SN2 ->
+      case SN_TEST, SN2, SN1 ->
           DriveConfig.builder()
               .wheelRadius(Units.inchesToMeters(2))
               .robotLengthX(Units.inchesToMeters(24.0))
@@ -40,10 +40,10 @@ public class DriveConstants {
               .maxAngularVelocity(Units.degreesToRadians(720)) // Radians
               .maxAngularAcceleration(Units.degreesToRadians(1000)) // Radians // TODO verify angle constraints
               .build();
-      case SN1 ->
+      case ATLAS, OVERTIME ->
           new DriveConfig(
-              Units.inchesToMeters(2.01834634),
-              Units.inchesToMeters(20.75),
+              Units.inchesToMeters(2),
+              Units.inchesToMeters(20.75), // Get these values corrected
               Units.inchesToMeters(20.75),
               Units.inchesToMeters(37),
               Units.inchesToMeters(33),
@@ -60,9 +60,9 @@ public class DriveConstants {
                     5.0,
                     0.0,
                     1.0 / DCMotor.getKrakenX60Foc(1).KtNMPerAmp, // A/(N*m)
-                    35.0,
+                    1.2,
                     0.0,
-                    4000.0,
+                    1.2,
                     50.0, 
                     Mk4iReductions.L2_PLUS.reduction,
                     Mk4iReductions.steer.reduction);
@@ -77,6 +77,28 @@ public class DriveConstants {
                     0.005,
                     Mk4iReductions.L2_PLUS.reduction,
                     Mk4iReductions.steer.reduction);
+            case ATLAS -> //TODO TUNE
+                    new ModuleGainsAndRatios(
+                        0.014,
+                        0.134,
+                        0.0,
+                        0.1,
+                        0.0,
+                        10.0,
+                        0.0,
+                        Mk4iReductions.L2_PLUS.reduction,
+                        Mk4iReductions.steer.reduction);
+            case OVERTIME -> //TODO TUNE
+                        new ModuleGainsAndRatios(
+                            0.014,
+                            0.134,
+                            0.0,
+                            0.1,
+                            0.0,
+                            10.0,
+                            0.0,
+                            Mk4iReductions.L2_PLUS.reduction,
+                            Mk4iReductions.steer.reduction);
             case SN_TEST ->
                 new ModuleGainsAndRatios(
                     0.014,
@@ -92,7 +114,7 @@ public class DriveConstants {
     // Odometry Constants
     public static final double odometryFrequency =
         switch (CatzConstants.getRobotType()) {
-            case SN_TEST -> 50.0;
+            case SN_TEST,ATLAS,OVERTIME -> 50.0;
             case SN1 -> 100.0;
             case SN2 -> 250.0;
         };
@@ -109,10 +131,10 @@ public class DriveConstants {
         switch (CatzConstants.getRobotType()) {
             case SN2 ->
                 new ModuleConfig[] {
-                    new ModuleConfig(1, 2, 9, 1.4196464857/Math.PI/2+0.5),
-                    new ModuleConfig(3, 4, 8, 4.6208462275/Math.PI/2+0.5),
-                    new ModuleConfig(5, 6, 7, 0.6691969510/Math.PI/2),
-                    new ModuleConfig(7, 8, 6, 2.0568857418/Math.PI/2)
+                    new ModuleConfig(1, 2, 9, 0.228031255+0.5),
+                    new ModuleConfig(3, 4, 8, 0.733477518+0.5),
+                    new ModuleConfig(5, 6, 7, 1.1043222),
+                    new ModuleConfig(7, 8, 6, 0.3417887)
                 };
             case SN1 ->
                 new ModuleConfig[] {
@@ -120,6 +142,20 @@ public class DriveConstants {
                     new ModuleConfig(3, 4, 8, 0.24567763114+0.5),
                     new ModuleConfig(5, 6, 7, -0.1892973047),
                     new ModuleConfig(7, 8, 6, 0.010002000)
+                };
+            case ATLAS -> // TODO TUNE sn1 atlas, overtime
+                new ModuleConfig[] {
+                    new ModuleConfig(1, 2, 9, 1.2307227057),
+                    new ModuleConfig(3, 4, 8, 0.24567763114+0.5),
+                    new ModuleConfig(5, 6, 7, -0.1892973047),
+                    new ModuleConfig(7, 8, 6, 0.010002000)
+                };
+            case OVERTIME ->
+                new ModuleConfig[] {
+                    new ModuleConfig(1, 2, 9, -0.719),
+                    new ModuleConfig(3, 4, 8, 0.339),
+                    new ModuleConfig(5, 6, 7, 0.913),
+                    new ModuleConfig(7, 8, 6, 6.522)
                 };
             case SN_TEST -> 
                 new ModuleConfig[] {

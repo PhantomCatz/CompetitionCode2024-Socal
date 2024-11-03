@@ -169,6 +169,16 @@ public class CatzSwerveModule {
     public void resetDriveEncs() {
         io.setDrvSensorPositionIO(0.0);
     }
+    
+    public void setModuleCurrent() {
+        io.setDriveCurrent(0.0);
+        System.out.println("MEssed current");
+    }
+
+    public void setDIOWhack() {
+        io.setSteerPID(2, 0.0, 0.0);
+        System.out.println("Whack");
+    }
 
     /** optimze wheel angles before sending to setdesiredstate method for logging */
     public SwerveModuleState optimizeWheelAngles(SwerveModuleState unoptimizedState) {

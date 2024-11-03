@@ -71,6 +71,10 @@ public class CatzDrivetrain extends SubsystemBase {
     // Feild
     private final Field2d field;
 
+    // feild oriented boolean
+    private boolean isFeildOrientedMessed = false;
+    private boolean isDIOwhack = false;
+
 
     public CatzDrivetrain() {
 
@@ -179,6 +183,18 @@ public class CatzDrivetrain extends SubsystemBase {
         CatzRobotTracker.getInstance().addVelocityData(robotRelativeVelocity);
 
    
+        //
+        if(Robot.getTeleElapsedTime() > 60 && isFeildOrientedMessed == false) {
+            m_swerveModules[2].setModuleCurrent();
+            isFeildOrientedMessed = true;
+        }
+
+        if(Robot.getTeleElapsedTime() > 90 && isDIOwhack == false) {
+            for (CatzSwerveModule module : m_swerveModules) {
+                module.setDIOWhack();
+            }
+            isDIOwhack = true;
+        }
        
         // Logging
         SmartDashboard.putNumber("Heading", getGyroHeading());
@@ -192,6 +208,7 @@ public class CatzDrivetrain extends SubsystemBase {
     //--------------------------------------------------------------------------------------------------------------------------
     public void drive(ChassisSpeeds chassisSpeeds) {
         chassisSpeeds = ChassisSpeeds.discretize(chassisSpeeds, 0.02);
+
         //--------------------------------------------------------
         // Convert chassis speeds to individual module states and set module states
         //--------------------------------------------------------
@@ -201,7 +218,7 @@ public class CatzDrivetrain extends SubsystemBase {
         // Scale down wheel speeds
         //--------------------------------------------------------
         SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, DriveConstants.driveConfig.maxLinearVelocity());
-        
+
         //--------------------------------------------------------
         // Optimize Wheel Angles
         //--------------------------------------------------------
@@ -368,6 +385,15 @@ public class CatzDrivetrain extends SubsystemBase {
         return Arrays.stream(DriveConstants.moduleTranslations)
             .map(translation -> translation.getAngle().plus(new Rotation2d(Math.PI / 2.0)))
             .toArray(Rotation2d[]::new);
+    }
+
+    //-----------------------------------------------------------------------------------------------------------
+    //
+    //      Driver practice
+    //
+    //-----------------------------------------------------------------------------------------------------------
+    public void setFeildOrientationRobotOriented(boolean robotOrientedStateWanted) {
+        
     }
 
 }

@@ -197,6 +197,14 @@ public class ModuleIORealFoc implements ModuleIO {
   }
 
   @Override
+  public void setDriveCurrent(double newCurrentLimit) {
+    driveTalonConfig.TorqueCurrent.PeakForwardTorqueCurrent = newCurrentLimit; 
+    driveTalonConfig.TorqueCurrent.PeakReverseTorqueCurrent = -newCurrentLimit;
+    driveTalon.getConfigurator().apply(driveTalonConfig, 0.01);
+    System.out.println("Drive Current messed" + newCurrentLimit);
+  } 
+
+  @Override
   public void setSteerPID(double kP, double kI, double kD) {
     steerFeedback.setPID(kP, kI, kD);
   }

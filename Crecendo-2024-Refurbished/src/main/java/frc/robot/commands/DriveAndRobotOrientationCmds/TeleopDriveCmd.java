@@ -5,6 +5,7 @@ import java.util.function.Supplier;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.CatzConstants;
+import frc.robot.Robot;
 import frc.robot.CatzConstants.AllianceColor;
 import frc.robot.CatzConstants.XboxInterfaceConstants;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.CatzRobotTracker;
@@ -78,13 +79,19 @@ public class TeleopDriveCmd extends Command {
 
     // Construct desired chassis speeds
     // Relative to field
-    chassisSpeeds = ChassisSpeeds
-                        .fromFieldRelativeSpeeds(m_headingAndVelocity_X, 
-                                                  m_headingAndVelocity_Y, 
-                                                  turningVelocity, 
-                                                  CatzRobotTracker.getInstance().getRobotRotation()
-                        );
+    chassisSpeeds = (Robot.getTeleElapsedTime() > Robot.FIELD_ORIENTATION_MESSUP_START_TIME) 
+                      ?
+                        new ChassisSpeeds(m_headingAndVelocity_X, m_headingAndVelocity_Y, turningVelocity)
+                      :
+                        ChassisSpeeds
+                          .fromFieldRelativeSpeeds(m_headingAndVelocity_X, 
+                                                    m_headingAndVelocity_Y, 
+                                                    turningVelocity, 
+                                                    CatzRobotTracker.getInstance().getRobotRotation()
+                          );
 
+    if(Robot.getTeleElapsedTime() > Robot.FIELD_ORIENTATION_MESSUP_START_TIME) {
+    }
 
     // Send new chassisspeeds object to the drivetrain
     m_drivetrain.drive(chassisSpeeds);

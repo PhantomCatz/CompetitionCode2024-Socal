@@ -54,6 +54,8 @@ public interface ModuleIO {
 
  public default void setDrivePID(double kP, double kI, double kD) {}
 
+ public default void setDriveCurrent(double currentLimit) {}
+
  //---------------------------------------------------------------------------
  //   Steer Access Methods
  //---------------------------------------------------------------------------
@@ -71,5 +73,6 @@ public interface ModuleIO {
  //   Mag Enc Access Methods
  //---------------------------------------------------------------------------
  public default void resetMagEncoderIO() {}
+
 
 }

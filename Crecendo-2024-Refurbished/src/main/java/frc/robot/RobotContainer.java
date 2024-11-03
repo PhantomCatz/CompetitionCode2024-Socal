@@ -31,21 +31,7 @@ import frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain.DriveConstan
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.vision.CatzVision;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.vision.VisionIO;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.vision.VisionIOLimeLight;
-import frc.robot.CatzSubsystems.IntakeRollers.CatzIntakeRollers;
 import frc.robot.CatzSubsystems.LEDs.CatzLED;
-import frc.robot.CatzSubsystems.Shooter.ShooterFeeder.CatzShooterFeeder;
-import frc.robot.CatzSubsystems.Shooter.ShooterFlywheels.CatzShooterFlywheels;
-import frc.robot.CatzSubsystems.SuperSubsystem.CatzSuperSubsystem;
-import frc.robot.CatzSubsystems.SuperSubsystem.CatzSuperSubsystem.SuperstructureState;
-import frc.robot.CatzSubsystems.SuperSubsystem.Elevator.CatzElevator;
-import frc.robot.CatzSubsystems.SuperSubsystem.Elevator.CatzElevator.ElevatorPosition;
-import frc.robot.CatzSubsystems.SuperSubsystem.IntakePivot.CatzIntakePivot;
-import frc.robot.CatzSubsystems.SuperSubsystem.IntakePivot.CatzIntakePivot.IntakePivotPosition;
-import frc.robot.CatzSubsystems.SuperSubsystem.ShooterPivot.CatzShooterPivot;
-import frc.robot.CatzSubsystems.SuperSubsystem.ShooterPivot.CatzShooterPivot.ShooterPivotPositionType;
-import frc.robot.CatzSubsystems.SuperSubsystem.ShooterTurret.CatzShooterTurret;
-import frc.robot.Commands.AutomatedSequenceCmds;
-import frc.robot.Commands.ControllerModeAbstraction;
 import frc.robot.Commands.DriveAndRobotOrientationCmds.FaceTarget;
 import frc.robot.Commands.DriveAndRobotOrientationCmds.TeleopDriveCmd;
 import frc.robot.Commands.DriveAndRobotOrientationCmds.TrajectoryDriveCmd;
@@ -59,16 +45,7 @@ public class RobotContainer {
 
   // Subsystem Declaration
   private static CatzDrivetrain   drive                = new CatzDrivetrain();
-  private static CatzShooterFeeder shooterFeeder       = new CatzShooterFeeder();
-  private static CatzShooterFlywheels shooterFlywheels = new CatzShooterFlywheels();
-  private static CatzIntakeRollers rollers             = new CatzIntakeRollers();
 
-  // Superstructure member subsystem declaration
-  private static CatzElevator     elevator             = new CatzElevator();
-  private static CatzShooterTurret turret              = new CatzShooterTurret();
-  private static CatzShooterPivot  shooterPivot        = new CatzShooterPivot();
-  private static CatzIntakePivot   intakePivot         = new CatzIntakePivot();
-  private static CatzSuperSubsystem superstructure = new CatzSuperSubsystem(elevator, turret, shooterPivot, intakePivot);
 
   // Assistance Subsystem declaration
   private static CatzLED          led = CatzLED.getInstance();
@@ -89,7 +66,6 @@ public class RobotContainer {
   private final LoggedDashboardNumber endgameAlert2 = new LoggedDashboardNumber("Endgame Alert #2", 15.0);
 
   // Auto Declaration
-  private AutomatedSequenceCmds autosequence = new AutomatedSequenceCmds();
   private CatzAutonomous auto = new CatzAutonomous(this);
 
   public RobotContainer() {
@@ -131,42 +107,6 @@ public class RobotContainer {
   //
   //---------------------------------------------------------------------------
   private void configureBindings() { // TODO organize by function
-    
-    /* XBOX AUX */
-    xboxAux.povRight().onTrue(ControllerModeAbstraction.sortModes(true)); // speaker
-    xboxAux.povLeft().onTrue(ControllerModeAbstraction.sortModes(false)); // amp
-    xboxAux.rightTrigger().onTrue(ControllerModeAbstraction.cancelController(this));    
-
-    xboxAux.y().onTrue(ControllerModeAbstraction.robotHandoff(this)); // Handoff between shooter and intake
-    xboxAux.a().onTrue(superstructure.setSuperStructureState(SuperstructureState.STOW)); // ResetPosition
-    xboxAux.x().onTrue(ControllerModeAbstraction.robotScore(this, ()->xboxAux.b().getAsBoolean()));  // Score // Override
-    xboxAux.back().onTrue(ControllerModeAbstraction.robotScoreSubwoofer(this, ()->xboxAux.b().getAsBoolean()));
-
-    Trigger leftYTrigger = new Trigger(()->(xboxAux.getLeftY() > XboxInterfaceConstants.kDeadband)); // Manual ShooterPivot
-    leftYTrigger.onTrue(superstructure.setShooterPivotManualPower(()->-xboxAux.getLeftY()));
-
-    Trigger rightYTrigger = new Trigger(()->(xboxAux.getRightX() > XboxInterfaceConstants.kDeadband)); // Manual Turret
-    rightYTrigger.onTrue(superstructure.setTurretManual(()->-xboxAux.getRightX()));
-    
-    xboxAux.rightBumper().whileTrue(rollers.setRollersIn());
-
-    xboxAux.leftBumper().onTrue(rollers.setRollersOut().withTimeout(0.3)
-                                                       .andThen(superstructure.setSuperStructureState(SuperstructureState.SCORE_AMP_PART_2)));
-                                                      //  .unless(()->!superstructure.isPreviousSuperSubsystemStateScoreAmp()))
-                                                      //   );
-    xboxAux.leftBumper().and(xboxAux.rightBumper()).whileTrue(rollers.setRollersOff());
-
-
-    /* XBOX DRIVE */
-    xboxDrv.leftStick().onTrue(ControllerModeAbstraction.robotIntake(this));
-    xboxDrv.rightTrigger().onTrue(ControllerModeAbstraction.cancelController(this));
-    xboxDrv.start().onTrue(drive.cancelTrajectory());
-
-    // Auto Driving
-    xboxDrv.y().onTrue(new FaceTarget(FieldConstants.Speaker.centerSpeakerOpening.toTranslation2d(), drive));
-    xboxDrv.b().onTrue(auto.autoFindPathAmp());
-    xboxDrv.x().onTrue(auto.autoFindPathSpeaker());
-    xboxDrv.a().onTrue(superstructure.setSuperStructureState(SuperstructureState.STOW));
 
 
     
@@ -224,30 +164,6 @@ public class RobotContainer {
   //---------------------------------------------------------------------------
   public CatzDrivetrain getCatzDrivetrain() {
     return drive;
-  }
-
-  public CatzSuperSubsystem getCatzSuperstructure() {
-    return superstructure;
-  }
-
-  public CatzElevator getCatzElevator() {
-    return elevator;
-  }
-
-  public CatzShooterFeeder getCatzShooterFeeder() {
-    return shooterFeeder;
-  }
-
-  public CatzShooterFlywheels getCatzShooterFlywheels() {
-    return shooterFlywheels;
-  }
-
-  public CatzIntakeRollers getCatzIntakeRollers() {
-    return rollers;
-  }
-
-  public CatzIntakePivot getCatzIntakePivot() {
-    return intakePivot;
   }
 
   public CatzAutonomous getCatzAutonomous(){
