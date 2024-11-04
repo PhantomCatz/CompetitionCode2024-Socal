@@ -43,6 +43,7 @@ import frc.robot.Commands.ControllerModeAbstraction;
 import frc.robot.Utilities.Alert;
 import frc.robot.Utilities.AllianceFlipUtil;
 import frc.robot.Utilities.Alert.AlertType;
+import lombok.Getter;
 
 public class Robot extends LoggedRobot {
   //-------------------------------------------------------------------------------------------------------------
@@ -70,6 +71,7 @@ public class Robot extends LoggedRobot {
   private double autoStart;
   private boolean autoMessagePrinted;
   private static double teleElapsedTime = 0.0;
+  @Getter private static double autoElapsedTime = 0.0;
   // Can Error Detection variables
   private static final double canErrorTimeThreshold = 0.5; // Seconds to disable alert
   private static final double canivoreErrorTimeThreshold = 0.5;
@@ -365,7 +367,9 @@ public class Robot extends LoggedRobot {
   }
 
   @Override
-  public void autonomousPeriodic() {}
+  public void autonomousPeriodic() {
+    autoElapsedTime = Timer.getFPGATimestamp() - autoStart;
+  }
 
   @Override
   public void autonomousExit() {}

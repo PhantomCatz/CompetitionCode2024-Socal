@@ -3,18 +3,22 @@ package frc.robot.CatzSubsystems.DriveAndRobotOrientation.vision;
 import java.util.ArrayList;
 import java.util.List;
 
+import static frc.robot.CatzSubsystems.DriveAndRobotOrientation.vision.VisionConstants.*;
+
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.CatzConstants;
+import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.CatzConstants.RobotHardwareMode;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.CatzRobotTracker;
-import frc.robot.CatzSubsystems.DriveAndRobotOrientation.CatzRobotTracker.VisionFromAprilTagObservation;
+import frc.robot.CatzSubsystems.DriveAndRobotOrientation.CatzRobotTracker.VisionObservation;
 
 public class CatzVision extends SubsystemBase {
 
@@ -55,9 +59,7 @@ public class CatzVision extends SubsystemBase {
             if(cameras[i].getName().equals("limelight-ramen")) { 
                 // Continue
             } else {
-                if (inputs[i].hasTarget &&
-                    inputs[i].maxDistance < LOWEST_DISTANCE && // Process vision only when in teleop and in range of apriltag
-                    !DriverStation.isAutonomous()) {
+                if (Robot.isReal()) { // Prevents outoff bounds craash
                     processVision(i);
                 }
             }
@@ -81,23 +83,32 @@ public class CatzVision extends SubsystemBase {
                                         inputs[cameraNum].y, 
                                         new Rotation2d(inputs[cameraNum].rotation)
                              );
+        boolean useVisionRotation = false;
 
-        // A vision updates to robot tracker
-        
-        if(RobotContainer.updateLimelight){
+        //------------------------------------------------------------------------------------------------------
+        //  Standard Devs (increase by distance away from apriltag and what camera is seeing the apriltag)
+        //------------------------------------------------------------------------------------------------------
+        // Set Standard Devs for vision translation
+        double xyStdDev =
+            xyStdDevCoefficient
+                * Math.pow(inputs[cameraNum].maxDistance, 2.0)
+                * stdDevFactors[cameraNum];
+        // Set Standard Devs for vision rotation
+        double thetaStdDev =
+            useVisionRotation
+                 ? thetaStdDevCoefficient 
+                    * Math.pow(inputs[cameraNum].maxDistance, 2.0)
+                    * stdDevFactors[cameraNum]
+                : Double.POSITIVE_INFINITY;
 
-            CatzRobotTracker.getInstance()
-                                .addVisionObservation(
-                                    new VisionFromAprilTagObservation(inputs[cameraNum].timestamp, 
-                                                                      currentPose, 
-                                                                      inputs[cameraNum].primaryApriltagID, 
-                                                                      inputs[cameraNum].hasTarget,
-                                                                      0.0, 
-                                                                      inputs[cameraNum].ta, 
-                                                                      cameras[cameraNum].getName())
-                                ); //TODO it's not working. it drives in a spiral of archemedes occasionally
-        }
-
+        CatzRobotTracker.getInstance()
+                            .addVisionObservation(
+                                new VisionObservation(
+                                    currentPose, 
+                                    inputs[cameraNum].timestamp, 
+                                    VecBuilder.fill(xyStdDev, xyStdDev, thetaStdDev)
+                                )
+        ); 
         camNum = cameraNum;
     }
 

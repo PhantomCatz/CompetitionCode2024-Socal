@@ -61,7 +61,9 @@ public class VisionIOLimeLight implements VisionIO {
         inputs.latency = latency;
         //shoves in new pose2d from pose3d object estimate depending on if new apriltag detected
             
-        
+        //------------------------------------------------------------------------------------------------------
+        //  Null Filtering Limelight poses
+        //------------------------------------------------------------------------------------------------------
         if (inputs.hasTarget && !name.equals("limelight-ramen")) {
             // sets input timestamp
             inputs.isNewVisionPose = true;
@@ -100,8 +102,7 @@ public class VisionIOLimeLight implements VisionIO {
             
             prevVisionPos = visionPose2d;
             badData = false;           
-        } 
-        else {
+        } else {
             //limelight is not correct and doesn't currently have a target to look for
             inputs.isNewVisionPose = false;
             prevVisionPos = null;

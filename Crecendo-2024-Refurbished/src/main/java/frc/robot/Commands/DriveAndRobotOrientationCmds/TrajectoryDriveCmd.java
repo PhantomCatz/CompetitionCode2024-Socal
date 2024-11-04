@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.CatzConstants;
+import frc.robot.Robot;
 import frc.robot.CatzConstants.AllianceColor;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.CatzRobotTracker;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain.CatzDrivetrain;
@@ -101,15 +102,16 @@ public class TrajectoryDriveCmd extends Command {
             usePath = path.flipPath();
         }
 
-        if(DriverStation.isAutonomous()) {
-            CatzRobotTracker.getInstance().resetPosition(usePath.getPreviewStartingHolonomicPose());
+        if(DriverStation.isAutonomous() && Robot.getAutoElapsedTime() < 1.0) { //Only reset position when in auto and in timer threshold
+            CatzRobotTracker.getInstance().resetPose(usePath.getPreviewStartingHolonomicPose());
+            System.out.println("Reset");
         }
         this.trajectory = new PathPlannerTrajectory(
             usePath, 
             DriveConstants.
                 swerveDriveKinematics.
-                    toChassisSpeeds(CatzRobotTracker.getInstance().getRobotSwerveModuleStates()),
-            CatzRobotTracker.getInstance().getRobotRotation()
+                    toChassisSpeeds(CatzRobotTracker.getInstance().getCurrentModuleStates()),
+            CatzRobotTracker.getInstance().getEstimatedPose().getRotation()
         );
                                                
         pathTimeOut = trajectory.getTotalTimeSeconds() * TIMEOUT_SCALAR; //TODO do we still need this
@@ -202,7 +204,7 @@ public class TrajectoryDriveCmd extends Command {
     public void end(boolean interrupted) {
         timer.stop(); // Stop timer
         m_driveTrain.stopDriving();
-        System.out.println("trajectory done");
+       // System.out.println("trajectory done");
     }
 
     @Override

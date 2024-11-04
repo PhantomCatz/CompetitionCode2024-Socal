@@ -161,13 +161,11 @@ public class CatzDrivetrain extends SubsystemBase {
         CatzRobotTracker.getInstance()
                             .addOdometryObservation(
                                 new OdometryObservation(
-                                    Timer.getFPGATimestamp(), 
-                                    wheelPositions, 
-                                    gyroAngle2d, 
-                                    getModuleStates(), 
-                                    gyroInputs.gyroYawVel, 
-                                    gyroInputs.gyroAccelX, 
-                                    gyroInputs.gyroAccelY)
+                                wheelPositions,
+                                getModuleStates(),
+                                gyroAngle2d,
+                                Timer.getFPGATimestamp()    
+                                )
                             );
 
         // Update current velocities use gyro when possible

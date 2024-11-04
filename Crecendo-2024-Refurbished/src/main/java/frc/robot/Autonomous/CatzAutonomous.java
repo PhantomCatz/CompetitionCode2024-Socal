@@ -31,6 +31,7 @@ import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import frc.robot.RobotContainer;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.CatzRobotTracker;
@@ -57,7 +58,8 @@ public class CatzAutonomous {
     private JSONParser parser = new JSONParser();
 
     private HashMap<String, ModifiableCmd> modifiableCmds = new HashMap<>();
-    private File pathsDirectory = new File(Filesystem.getDeployDirectory(), "choreo");
+    private File choreoPathsDirectory = new File(Filesystem.getDeployDirectory(), "choreo");
+    private File pathplannerPathsDirectory = new File(Filesystem.getDeployDirectory(), "pathplanner/paths");
     private File autosDirectory = new File(Filesystem.getDeployDirectory(), "pathplanner/autos");
     private String lastAutoName = null;
 
@@ -75,31 +77,52 @@ public class CatzAutonomous {
         BooleanSupplier shouldFlip = ()->AllianceFlipUtil.shouldFlipToRed();
         AutoBuilder.configureHolonomic(
             tracker::getEstimatedPose,
-            tracker::resetPosition,
+            tracker::resetPose,
             tracker::getRobotChassisSpeeds,
             container.getCatzDrivetrain()::drive,
             config,
             shouldFlip,
             container.getCatzDrivetrain()
         );
-
-        // ORDER MATTERS! Register named commands first, configure questionairre second, and add autos to dashboard last
-        for(File pathFile : pathsDirectory.listFiles()){
+        //------------------------------------------------------------------------------------------------------------
+        // Autonmous questionaire gui configurations
+        // ORDER MATTERS! Register named commands first, configure questionaire second, and add autos to dashboard last
+        //------------------------------------------------------------------------------------------------------------
+        //------------------------------------------------------------------------------------------------------------
+        // Path Configuration
+        //------------------------------------------------------------------------------------------------------------
+        for(File pathFile : choreoPathsDirectory.listFiles()){
             //to get rid of the extensions trailing the path names
             String pathName = pathFile.getName().replaceFirst("[.][^.]+$", ""); 
             PathPlannerPath path = PathPlannerPath.fromChoreoTrajectory(pathName);
             NamedCommands.registerCommand(pathName, new TrajectoryDriveCmd(path, container.getCatzDrivetrain()));
         }
+        for(File pathFile : pathplannerPathsDirectory.listFiles()){
+            //to get rid of the extensions trailing the path names
+            String pathName = pathFile.getName().replaceFirst("[.][^.]+$", ""); 
+            PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
+            NamedCommands.registerCommand(pathName, new TrajectoryDriveCmd(path, container.getCatzDrivetrain()));
+        }
+        //----------------------------------------------------------------------------------------
+        //  Named Command registration
+        //----------------------------------------------------------------------------------------
+        NamedCommands.registerCommand("TestPrint", new PrintCommand("Benchmark"));
+        NamedCommands.registerCommand("ReturnToScore", autoFindPathSpeaker());
 
-        // Questionaire configuration
-        HashMap<String, Command> scoringPositions = new HashMap<>();
-        scoringPositions.put("High", new PrintCommand("High"));
-        scoringPositions.put("Mid", new PrintCommand("Mid"));
-        scoringPositions.put("Low", new PrintCommand("Low"));
-        modifiableCmds.put("Score1", new ModifiableCmd("Scoring Position 1?", scoringPositions));
-        modifiableCmds.put("Score2", new ModifiableCmd("Scoring Position 2?", scoringPositions));
-        modifiableCmds.put("Score3", new ModifiableCmd("Scoring Position 3?", scoringPositions));
+        //---------------------------------------------------------------------------
+        //  Test Auto Path Configuration
+        //---------------------------------------------------------------------------
+        HashMap<String, Command> scoringChoices = new HashMap<>();
+        scoringChoices.put("Top GP", NamedCommands.getCommand("Wing Option Top"));
+        scoringChoices.put("Mid GP", NamedCommands.getCommand("Wing Option Mid").alongWith(new PrintCommand("Mid")));
+        scoringChoices.put("Do Nothing", new PrintCommand("Skipped"));
+        modifiableCmds.put("Score1", new ModifiableCmd("Top or Mid GP?", scoringChoices));
+        modifiableCmds.put("Score2", new ModifiableCmd("Top or Mid GP?", scoringChoices));
+        modifiableCmds.put("Score3", new ModifiableCmd("Scoring Position 3?", scoringChoices));
 
+        //---------------------------------------------------------------------------
+        //  Sping Auto Conifig
+        //---------------------------------------------------------------------------
         HashMap<String, Command> moveOptions = new HashMap<>();
         moveOptions.put("Spin", NamedCommands.getCommand("TurnStraight"));
         moveOptions.put("Move", NamedCommands.getCommand("DriveStraight"));
@@ -110,7 +133,7 @@ public class CatzAutonomous {
         });
         for (File autoFile: autosDirectory.listFiles()){
             String autoName = autoFile.getName().replaceFirst("[.][^.]+$", "");
-            autoPathChooser.addDefaultOption(autoName, new PathPlannerAuto(autoName));
+            autoPathChooser.addOption(autoName, new PathPlannerAuto(autoName));
         }
     }
 
@@ -205,6 +228,6 @@ public class CatzAutonomous {
 
     /** Getter for final autonomous routine */
     public Command getCommand() { 
-        return new WheelRadiusCharacterization(m_container.getCatzDrivetrain(), Direction.CLOCKWISE);
+        return autoPathChooser.get();
     }
 }

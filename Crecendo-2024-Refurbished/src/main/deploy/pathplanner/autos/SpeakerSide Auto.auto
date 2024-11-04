@@ -2,8 +2,8 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 2,
-      "y": 2
+      "x": 1.6002032004064015,
+      "y": 6.992561413694256
     },
     "rotation": 0
   },
@@ -14,13 +14,19 @@
         {
           "type": "named",
           "data": {
-            "name": "Choreo"
+            "name": "Wing Scoring 1"
           }
         },
         {
           "type": "named",
           "data": {
             "name": "Score1"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Wing 3"
           }
         },
         {
@@ -41,6 +47,12 @@
                       "type": "named",
                       "data": {
                         "name": "Score3"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Wing 3"
                       }
                     }
                   ]
