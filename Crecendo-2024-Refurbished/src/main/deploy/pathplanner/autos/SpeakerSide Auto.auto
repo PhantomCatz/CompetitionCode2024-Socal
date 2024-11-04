@@ -12,6 +12,12 @@
     "data": {
       "commands": [
         {
+          "type": "sequential",
+          "data": {
+            "commands": []
+          }
+        },
+        {
           "type": "named",
           "data": {
             "name": "Wing Scoring 1"

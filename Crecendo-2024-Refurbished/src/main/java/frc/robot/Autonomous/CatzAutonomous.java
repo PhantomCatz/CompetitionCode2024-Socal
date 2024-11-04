@@ -57,7 +57,7 @@ public class CatzAutonomous {
     private boolean trajectoriesLoaded = false;
     private JSONParser parser = new JSONParser();
 
-    private HashMap<String, ModifiableCmd> modifiableCmds = new HashMap<>();
+    private HashMap<String, DashboardCmd> dashboardCmds = new HashMap<>();
     private File choreoPathsDirectory = new File(Filesystem.getDeployDirectory(), "choreo");
     private File pathplannerPathsDirectory = new File(Filesystem.getDeployDirectory(), "pathplanner/paths");
     private File autosDirectory = new File(Filesystem.getDeployDirectory(), "pathplanner/autos");
@@ -112,13 +112,15 @@ public class CatzAutonomous {
         //---------------------------------------------------------------------------
         //  Test Auto Path Configuration
         //---------------------------------------------------------------------------
+        Command wingOptionTop = NamedCommands.getCommand("Wing Option Top");
+
         HashMap<String, Command> scoringChoices = new HashMap<>();
-        scoringChoices.put("Top GP", NamedCommands.getCommand("Wing Option Top"));
-        scoringChoices.put("Mid GP", NamedCommands.getCommand("Wing Option Mid").alongWith(new PrintCommand("Mid")));
+        scoringChoices.put("Top GP", wingOptionTop);
+        scoringChoices.put("Mid GP", NamedCommands.getCommand("Wing Option Mid"));
         scoringChoices.put("Do Nothing", new PrintCommand("Skipped"));
-        modifiableCmds.put("Score1", new ModifiableCmd("Top or Mid GP?", scoringChoices));
-        modifiableCmds.put("Score2", new ModifiableCmd("Top or Mid GP?", scoringChoices));
-        modifiableCmds.put("Score3", new ModifiableCmd("Scoring Position 3?", scoringChoices));
+        dashboardCmds.put("Score1", new DashboardCmd("Top or Mid GP?", scoringChoices));
+        dashboardCmds.put("Score2", new DashboardCmd("Top or Mid GP?", scoringChoices));
+        dashboardCmds.put("Score3", new DashboardCmd("Scoring Position 3?", scoringChoices));
 
         //---------------------------------------------------------------------------
         //  Sping Auto Conifig
@@ -126,9 +128,9 @@ public class CatzAutonomous {
         HashMap<String, Command> moveOptions = new HashMap<>();
         moveOptions.put("Spin", NamedCommands.getCommand("TurnStraight"));
         moveOptions.put("Move", NamedCommands.getCommand("DriveStraight"));
-        modifiableCmds.put("SpinOrMove", new ModifiableCmd("Spin or Move?", moveOptions));
+        dashboardCmds.put("SpinOrMove", new DashboardCmd("Spin or Move?", moveOptions));
 
-        modifiableCmds.forEach((k, v) -> {
+        dashboardCmds.forEach((k, v) -> {
             NamedCommands.registerCommand(k, v);
         });
         for (File autoFile: autosDirectory.listFiles()){
@@ -157,7 +159,7 @@ public class CatzAutonomous {
 
                 for(Object o : commands){
                     String commandName = JSONUtil.getCommandName(o);
-                    ModifiableCmd modifiableCommand = modifiableCmds.get(commandName);
+                    DashboardCmd modifiableCommand = dashboardCmds.get(commandName);
                     
                     if(modifiableCommand != null){
                         String questionName = "Question " + String.valueOf(questionCounter);

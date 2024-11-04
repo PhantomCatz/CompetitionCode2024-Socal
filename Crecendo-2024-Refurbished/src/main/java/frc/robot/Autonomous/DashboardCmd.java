@@ -5,11 +5,11 @@ import java.util.HashMap;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 
-public class ModifiableCmd extends Command{
+public class DashboardCmd extends Command{
     private String question;
     private SendableChooser<Command> chooser = new SendableChooser<>();
 
-    public ModifiableCmd(String question, HashMap<String, Command> options){
+    public DashboardCmd(String question, HashMap<String, Command> options){
         options.forEach((k,v) -> {
             chooser.addOption(k,v);
         });
@@ -25,12 +25,19 @@ public class ModifiableCmd extends Command{
     }
 
     @Override
+    public void execute() {
+        chooser.getSelected().execute();
+    }
+
+    @Override
     public void initialize(){
         chooser.getSelected().schedule();
     }
 
     @Override
     public boolean isFinished(){
-        return chooser.getSelected().isFinished();
+        boolean tooEarly = chooser.getSelected().isFinished();
+        System.out.println(tooEarly);
+        return tooEarly;
     }
 }
