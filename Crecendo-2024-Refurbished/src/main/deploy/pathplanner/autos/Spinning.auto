@@ -18,9 +18,16 @@
           }
         },
         {
-          "type": "named",
+          "type": "parallel",
           "data": {
-            "name": "Score1"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Score1"
+                }
+              }
+            ]
           }
         }
       ]

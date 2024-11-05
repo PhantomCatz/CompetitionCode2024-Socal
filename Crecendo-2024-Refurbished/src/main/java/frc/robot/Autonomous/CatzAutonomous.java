@@ -133,10 +133,12 @@ public class CatzAutonomous {
         dashboardCmds.forEach((k, v) -> {
             NamedCommands.registerCommand(k, v);
         });
+        
         for (File autoFile: autosDirectory.listFiles()){
             String autoName = autoFile.getName().replaceFirst("[.][^.]+$", "");
             autoPathChooser.addOption(autoName, new PathPlannerAuto(autoName));
         }
+
     }
 
     public void updateQuestionaire(){

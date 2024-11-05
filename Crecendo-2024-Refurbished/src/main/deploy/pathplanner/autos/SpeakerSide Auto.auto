@@ -54,17 +54,17 @@
                       "data": {
                         "name": "Score3"
                       }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "Wing 3"
-                      }
                     }
                   ]
                 }
               }
             ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Wing 3"
           }
         }
       ]

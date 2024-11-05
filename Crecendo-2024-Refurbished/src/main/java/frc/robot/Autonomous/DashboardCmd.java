@@ -31,13 +31,12 @@ public class DashboardCmd extends Command{
 
     @Override
     public void initialize(){
-        chooser.getSelected().schedule();
+        chooser.getSelected().initialize();
     }
 
     @Override
     public boolean isFinished(){
-        boolean tooEarly = chooser.getSelected().isFinished();
-        System.out.println(tooEarly);
-        return tooEarly;
+        return chooser.getSelected().isFinished();
+        
     }
 }
