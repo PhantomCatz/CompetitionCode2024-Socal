@@ -12,12 +12,6 @@
     "data": {
       "commands": [
         {
-          "type": "sequential",
-          "data": {
-            "commands": []
-          }
-        },
-        {
           "type": "named",
           "data": {
             "name": "Wing Scoring 1"
@@ -36,35 +30,21 @@
           }
         },
         {
-          "type": "parallel",
+          "type": "named",
           "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "Score2"
-                }
-              },
-              {
-                "type": "sequential",
-                "data": {
-                  "commands": [
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "Score3"
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
+            "name": "Score2"
           }
         },
         {
           "type": "named",
           "data": {
             "name": "Wing 3"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Score3"
           }
         }
       ]

@@ -150,7 +150,7 @@ public class CatzAutonomous {
         
         for (File autoFile: autosDirectory.listFiles()){
             String autoName = autoFile.getName().replaceFirst("[.][^.]+$", "");
-            autoPathChooser.addOption(autoName, new PathPlannerAuto(autoName));
+            autoPathChooser.addDefaultOption(autoName, new PathPlannerAuto(autoName));
         }
 
     }

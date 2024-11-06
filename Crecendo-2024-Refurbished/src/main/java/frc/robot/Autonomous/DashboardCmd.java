@@ -9,6 +9,8 @@ public class DashboardCmd extends Command{
     private String question;
     private SendableChooser<Command> chooser = new SendableChooser<>();
 
+    private boolean isCommandSkipped = false;
+
     public DashboardCmd(String question, HashMap<String, Command> options){
         options.forEach((k,v) -> {
             chooser.addOption(k,v);
@@ -26,17 +28,27 @@ public class DashboardCmd extends Command{
 
     @Override
     public void execute() {
-        chooser.getSelected().execute();
+        try {
+            chooser.getSelected().execute();
+        } catch (Exception e) {
+
+        }
     }
 
     @Override
     public void initialize(){
-        chooser.getSelected().initialize();
+        isCommandSkipped = false;
+        try {
+            chooser.getSelected().initialize();
+        } catch (Exception e) {
+            System.out.println("Command Skipped due to uninitialization");
+            isCommandSkipped = true;
+        }
     }
 
     @Override
-    public boolean isFinished(){
-        return chooser.getSelected().isFinished();
+    public boolean isFinished() {
+        return isCommandSkipped || chooser.getSelected().isFinished(); // boolean is evaluated first to prevent crashing
         
     }
 }

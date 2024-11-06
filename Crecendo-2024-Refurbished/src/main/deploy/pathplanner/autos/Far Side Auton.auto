@@ -30,35 +30,21 @@
           }
         },
         {
-          "type": "parallel",
+          "type": "named",
           "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "Score2FarSide"
-                }
-              },
-              {
-                "type": "sequential",
-                "data": {
-                  "commands": [
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "ReturnWaypoint"
-                      }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "Score3FarSide"
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
+            "name": "Score2FarSide"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ReturnWaypoint"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Score3FarSide"
           }
         },
         {
