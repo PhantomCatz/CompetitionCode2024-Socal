@@ -3,7 +3,8 @@
   "robotLength": 0.9,
   "holonomicMode": true,
   "pathFolders": [
-    "Speaker Side Auto"
+    "Far Side Auton",
+    "SpeakerSide paths"
   ],
   "autoFolders": [],
   "defaultMaxVel": 3.0,

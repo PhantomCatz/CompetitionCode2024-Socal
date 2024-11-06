@@ -109,18 +109,32 @@ public class CatzAutonomous {
         NamedCommands.registerCommand("TestPrint", new PrintCommand("Benchmark"));
         NamedCommands.registerCommand("ReturnToScore", autoFindPathSpeaker());
 
+
         //---------------------------------------------------------------------------
-        //  Test Auto Path Configuration
+        // Far side auto Path Configuration
+        //---------------------------------------------------------------------------
+        HashMap<String, Command> farSideScoringChoices = new HashMap<>();
+
+        farSideScoringChoices.put("Bottom GP", NamedCommands.getCommand("CollectGP1"));
+        farSideScoringChoices.put("1 Up GP", NamedCommands.getCommand("ColletGP2"));
+        farSideScoringChoices.put("2 Up GP", NamedCommands.getCommand("ColletGP3"));
+        farSideScoringChoices.put("Do Nothing", new PrintCommand("Skipped"));
+        dashboardCmds.put("Score1FarSide", new DashboardCmd("Bottom or 1 up GP?", farSideScoringChoices));
+        dashboardCmds.put("Score2FarSide", new DashboardCmd("Bottom or 1 up GP?", farSideScoringChoices));
+        dashboardCmds.put("Score3FarSide", new DashboardCmd("Score 1 More?", farSideScoringChoices));
+
+        //---------------------------------------------------------------------------
+        // Speaker side auto Path Configuration
         //---------------------------------------------------------------------------
         Command wingOptionTop = NamedCommands.getCommand("Wing Option Top");
 
-        HashMap<String, Command> scoringChoices = new HashMap<>();
-        scoringChoices.put("Top GP", wingOptionTop);
-        scoringChoices.put("Mid GP", NamedCommands.getCommand("Wing Option Mid"));
-        scoringChoices.put("Do Nothing", new PrintCommand("Skipped"));
-        dashboardCmds.put("Score1", new DashboardCmd("Top or Mid GP?", scoringChoices));
-        dashboardCmds.put("Score2", new DashboardCmd("Top or Mid GP?", scoringChoices));
-        dashboardCmds.put("Score3", new DashboardCmd("Scoring Position 3?", scoringChoices));
+        HashMap<String, Command> spSdScoringChoices = new HashMap<>();
+        spSdScoringChoices.put("Top GP", wingOptionTop);
+        spSdScoringChoices.put("Mid GP", NamedCommands.getCommand("Wing Option Mid"));
+        spSdScoringChoices.put("Do Nothing", new PrintCommand("Skipped"));
+        dashboardCmds.put("Score1", new DashboardCmd("Top or Mid GP?", spSdScoringChoices));
+        dashboardCmds.put("Score2", new DashboardCmd("Top or Mid GP?", spSdScoringChoices));
+        dashboardCmds.put("Score3", new DashboardCmd("Scoring Position 3?", spSdScoringChoices));
 
         //---------------------------------------------------------------------------
         //  Sping Auto Conifig

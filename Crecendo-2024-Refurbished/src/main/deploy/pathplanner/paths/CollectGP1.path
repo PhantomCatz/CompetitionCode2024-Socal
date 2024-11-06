@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 1.2630356689284812,
-        "y": 7.0
+        "x": 4.171463749489552,
+        "y": 1.346746202764874
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.2630356689284845,
-        "y": 7.0
+        "x": 5.073198163514728,
+        "y": 0.9954211063914283
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 2.8609165789760156,
-        "y": 7.0
+        "x": 8.082883155780575,
+        "y": 0.7143610292926715
       },
       "prevControl": {
-        "x": 1.8609165789760156,
-        "y": 7.0
+        "x": 7.082883155780575,
+        "y": 0.7143610292926715
       },
       "nextControl": null,
       "isLocked": false,
@@ -43,7 +43,7 @@
     "rotateFast": false
   },
   "reversed": false,
-  "folder": "SpeakerSide paths",
+  "folder": "Far Side Auton",
   "previewStartingState": {
     "rotation": 0,
     "velocity": 0
