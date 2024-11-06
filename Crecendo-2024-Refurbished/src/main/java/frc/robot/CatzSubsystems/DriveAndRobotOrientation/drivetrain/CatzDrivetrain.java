@@ -72,7 +72,7 @@ public class CatzDrivetrain extends SubsystemBase {
     private final Field2d field;
 
     // feild oriented boolean
-    private boolean isFeildOrientedMessed = false;
+    private boolean isCurrentMessed = false;
     private boolean isDIOwhack = false;
 
 
@@ -184,12 +184,12 @@ public class CatzDrivetrain extends SubsystemBase {
 
    
         //
-        if(Robot.getTeleElapsedTime() > 60 && isFeildOrientedMessed == false) {
+        if((Robot.getTeleElapsedTime() > 60 && isCurrentMessed == false) && Robot.messupFeildOrientation) {
             m_swerveModules[2].setModuleCurrent();
-            isFeildOrientedMessed = true;
+            isCurrentMessed = true;
         }
 
-        if(Robot.getTeleElapsedTime() > 90 && isDIOwhack == false) {
+        if((Robot.getTeleElapsedTime() > 77 && isDIOwhack == false) && Robot.messupDIO) {
             for (CatzSwerveModule module : m_swerveModules) {
                 module.setDIOWhack();
             }

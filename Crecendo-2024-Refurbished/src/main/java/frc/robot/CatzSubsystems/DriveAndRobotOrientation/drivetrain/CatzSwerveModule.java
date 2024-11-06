@@ -176,7 +176,7 @@ public class CatzSwerveModule {
     }
 
     public void setDIOWhack() {
-        io.setSteerPID(2, 0.0, 0.0);
+        io.setSteerPID(2.0, 0.0, 0.0);
         System.out.println("Whack");
     }
 

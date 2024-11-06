@@ -31,6 +31,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.CatzConstants.AllianceColor;
@@ -114,13 +115,22 @@ public class Robot extends LoggedRobot {
   private final Alert lastDeploymentAlert = new Alert("Last Deployment: " + dateFormatted , AlertType.INFO);
 
 
-  // Driver Practice Timers
+  // Driver Practice additions
   public static final double FIELD_ORIENTATION_MESSUP_START_TIME = 30;
+  @Getter public static boolean messupDIO = true;
+  @Getter public static boolean messupCurrent = true;
+  @Getter public static boolean messupFeildOrientation = true;
+
+  private SendableChooser<Boolean> messupChooser = new SendableChooser<>();
+  
+
 
 
 
   @Override
   public void robotInit() {
+    messupChooser.setDefaultOption("MessUp DIO?", messupCurrent);
+    messupChooser.addOption("Messup Current", messupDIO);
 
     System.gc(); //TBD TODO 
 
@@ -388,11 +398,6 @@ public class Robot extends LoggedRobot {
   @Override
   public void teleopPeriodic() {
     teleElapsedTime = Timer.getFPGATimestamp() - teleStart;
-
-
-    if(teleElapsedTime > 30) {
-      
-    }
   }
 
   @Override

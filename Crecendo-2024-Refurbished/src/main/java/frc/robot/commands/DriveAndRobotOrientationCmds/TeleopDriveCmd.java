@@ -79,7 +79,7 @@ public class TeleopDriveCmd extends Command {
 
     // Construct desired chassis speeds
     // Relative to field
-    chassisSpeeds = (Robot.getTeleElapsedTime() > Robot.FIELD_ORIENTATION_MESSUP_START_TIME) 
+    chassisSpeeds = ((Robot.getTeleElapsedTime() > Robot.FIELD_ORIENTATION_MESSUP_START_TIME) && Robot.messupFeildOrientation) 
                       ?
                         new ChassisSpeeds(m_headingAndVelocity_X, m_headingAndVelocity_Y, turningVelocity)
                       :
