@@ -71,7 +71,7 @@ public class DriveConstants {
                     5.5,
                     0.6,
                     0.0,
-                    1.2,
+                    0.2,//1.2, //TODO fix to account for non foc
                     0.0,
                     0.7,
                     0.005,

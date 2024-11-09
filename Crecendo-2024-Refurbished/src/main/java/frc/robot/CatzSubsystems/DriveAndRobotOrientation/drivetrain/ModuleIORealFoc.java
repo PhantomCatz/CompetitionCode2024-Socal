@@ -52,6 +52,7 @@ public class ModuleIORealFoc implements ModuleIO {
   private final VoltageOut voltageControl = new VoltageOut(0).withUpdateFreqHz(0);
   private final TorqueCurrentFOC currentControl = new TorqueCurrentFOC(0).withUpdateFreqHz(0);
   private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC = new VelocityTorqueCurrentFOC(0).withUpdateFreqHz(0);
+  private final VelocityVoltage velocityVoltage = new VelocityVoltage(0).withUpdateFreqHz(0);
   private final PositionTorqueCurrentFOC positionControl = new PositionTorqueCurrentFOC(0).withUpdateFreqHz(0);
   private final NeutralOut neutralControl = new NeutralOut().withUpdateFreqHz(0);
   private final PIDController steerFeedback = new PIDController(moduleGainsAndRatios.steerkP(), 0.0, moduleGainsAndRatios.steerkD());
@@ -63,7 +64,7 @@ public class ModuleIORealFoc implements ModuleIO {
   public ModuleIORealFoc(ModuleConfig config) {
     m_config = config;
     // Init drive controllers from config constants
-    driveTalon = new TalonFX(config.driveID());
+    driveTalon = new TalonFX(config.driveID(), "*");
 
     // Restore Factory Defaults
     driveTalon.getConfigurator().apply(new TalonFXConfiguration());
@@ -169,7 +170,7 @@ public class ModuleIORealFoc implements ModuleIO {
 
   @Override
   public void runDriveVelocityRPSIO(double velocityMetersPerSec) {
-    driveTalon.setControl(velocityTorqueCurrentFOC.withVelocity(velocityMetersPerSec));
+    driveTalon.setControl(velocityVoltage.withVelocity(velocityMetersPerSec));
   }
 
   public void runSteerPercentOutput(double percentOutput) {
