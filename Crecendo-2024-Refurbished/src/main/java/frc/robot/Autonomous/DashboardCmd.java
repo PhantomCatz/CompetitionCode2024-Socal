@@ -27,19 +27,10 @@ public class DashboardCmd extends Command{
     }
 
     @Override
-    public void execute() {
-        try {
-            chooser.getSelected().execute();
-        } catch (Exception e) {
-
-        }
-    }
-
-    @Override
     public void initialize(){
         isCommandSkipped = false;
         try {
-            chooser.getSelected().initialize();
+            chooser.getSelected().schedule();
         } catch (Exception e) {
             System.out.println("Command Skipped due to uninitialization");
             isCommandSkipped = true;
@@ -49,6 +40,5 @@ public class DashboardCmd extends Command{
     @Override
     public boolean isFinished() {
         return isCommandSkipped || chooser.getSelected().isFinished(); // boolean is evaluated first to prevent crashing
-        
     }
 }

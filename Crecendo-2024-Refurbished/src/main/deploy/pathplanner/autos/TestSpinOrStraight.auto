@@ -16,19 +16,6 @@
           "data": {
             "name": "SpinOrMove"
           }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "Score1"
-                }
-              }
-            ]
-          }
         }
       ]
     }
