@@ -143,9 +143,9 @@ public class Robot extends LoggedRobot {
     // Set up data receivers & replay source
     switch (CatzConstants.hardwareMode) {
         case REAL:
-            // Running on a real robot, log to a USB stick ("/U/logs")
-            Logger.addDataReceiver(new WPILOGWriter());
-            //Logger.addDataReceiver(new WPILOGWriter("E:/Logs"));
+            // // Running on a real robot, log to a USB stick ("/U/logs")
+            //Logger.addDataReceiver(new WPILOGWriter());
+            // //Logger.addDataReceiver(new WPILOGWriter("E:/Logs"));
             Logger.addDataReceiver(new NT4Publisher());
             break;
 

@@ -73,6 +73,8 @@ public class CatzSwerveModule {
         steerMotorDisconnected = new Alert(m_moduleName + " steer motor disconnected!", Alert.AlertType.WARNING);
 
         resetDriveEncs();
+
+
     } // -End of CatzSwerveModule Constructor
 
     public void periodic() {
@@ -94,6 +96,7 @@ public class CatzSwerveModule {
         debugLogsSwerve();
     } // -End of CatzSwerveModule Periodic 
 
+
     public void debugLogsSwerve(){
         Logger.recordOutput("Module " + m_moduleName + "/drive recorded fps", Units.metersToFeet(Conversions.RPSToMPS(inputs.driveVelocityRPS)));
         Logger.recordOutput("Module " + m_moduleName + "/drive target fps", Units.metersToFeet(m_swerveModuleState.speedMetersPerSecond));
@@ -104,8 +107,10 @@ public class CatzSwerveModule {
 
 
         //SmartDashboard.putNumber("absencposrad" + m_moduleName, inputs.steerAbsoluteEncPosition.getRadians());
-        SmartDashboard.putNumber("absenctorad" + m_moduleName, getAbsEncRadians());
+        SmartDashboard.putNumber("rawEncoderRevs" + m_moduleName, getRawEnc());
         SmartDashboard.putNumber("angle" + m_moduleName , getCurrentRotation().getDegrees());
+
+
     }
 
     /**
@@ -217,6 +222,10 @@ public class CatzSwerveModule {
 
     public double getDrvVelocityRPS() {
         return inputs.driveVelocityRPS;
+    }
+
+    public double getRawEnc(){
+        return inputs.steerAbsoluteEncPosition.getRotations();
     }
 
     /** Outputs the Rotation object of the module */

@@ -60,10 +60,10 @@ public class DriveConstants {
                     5.0,
                     0.0,
                     1.0 / DCMotor.getKrakenX60Foc(1).KtNMPerAmp, // A/(N*m)
-                    35.0,
+                    0.2,
                     0.0,
-                    4000.0,
-                    50.0, 
+                    0.7,
+                    0.005, 
                     Mk4iReductions.L2_PLUS.reduction,
                     Mk4iReductions.steer.reduction);
             case SN2 ->
@@ -116,10 +116,10 @@ public class DriveConstants {
                 };
             case SN1 ->
                 new ModuleConfig[] {
-                    new ModuleConfig(1, 2, 9, 1.2307227057),
-                    new ModuleConfig(3, 4, 8, 0.24567763114+0.5),
-                    new ModuleConfig(5, 6, 7, -0.1892973047),
-                    new ModuleConfig(7, 8, 6, 0.010002000)
+                    new ModuleConfig(1, 2, 9, 0.2134),
+                    new ModuleConfig(3, 4, 8, 0.7446),
+                    new ModuleConfig(5, 6, 7, 0.7983),
+                    new ModuleConfig(7, 8, 6, 0.0070)
                 };
             case SN_TEST -> 
                 new ModuleConfig[] {

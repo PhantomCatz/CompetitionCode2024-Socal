@@ -77,7 +77,7 @@ public class CatzDrivetrain extends SubsystemBase {
         // Gyro Instantiation
         switch (CatzConstants.hardwareMode) {
             case REAL:
-                gyroIO = new GyroIONavX();
+                gyroIO = new GyroIOPigeon();
                 break;
             case REPLAY:
                 gyroIO = new GyroIONavX() {};
@@ -214,7 +214,6 @@ public class CatzDrivetrain extends SubsystemBase {
 
         Logger.recordOutput("Drive/chassispeeds", chassisSpeeds);
         Logger.recordOutput("Drive/modulestates", optimizedDesiredStates);
-
     }
 
     /**  Create a command to stop driving */
