@@ -24,16 +24,18 @@ public class CatzVision extends SubsystemBase {
 
     // Hardware IO declaration
     private final VisionIO[] cameras;
+
     public final VisionIOInputsAutoLogged[] inputs;
 
     // MISC variables
     private double targetID;
     private int acceptableTagID;
     private boolean useSingleTag = false;
+    static int camNum;
     public static final double LOWEST_DISTANCE = Units.feetToMeters(10.0);
 
-    public CatzVision(VisionIO[] cameras) {
-        this.cameras = cameras;
+    public CatzVision() {
+        cameras = limelights;
         inputs = new VisionIOInputsAutoLogged[cameras.length];
 
         for(int i = 0; i < cameras.length; i++) {
@@ -59,7 +61,7 @@ public class CatzVision extends SubsystemBase {
             if(cameras[i].getName().equals("limelight-ramen")) { 
                 // Continue
             } else {
-                if (Robot.isReal()) { // Prevents outoff bounds craash
+                if (Robot.isReal()) { // Prevents out of bounds crash in SIM
                     processVision(i);
                 }
             }
@@ -76,7 +78,6 @@ public class CatzVision extends SubsystemBase {
         //Logger.recordOutput("Vision/ResultCount", results.size());
     }
 
-    static int camNum;
     public void processVision(int cameraNum) {
         // create a new pose based off the new inputs[cameraNum
         Pose2d currentPose = new Pose2d(inputs[cameraNum].x, 
@@ -91,13 +92,13 @@ public class CatzVision extends SubsystemBase {
         // Set Standard Devs for vision translation
         double xyStdDev =
             xyStdDevCoefficient
-                * Math.pow(inputs[cameraNum].maxDistance, 2.0)
+                * Math.pow(inputs[cameraNum].distToCamera, 2.0)
                 * stdDevFactors[cameraNum];
         // Set Standard Devs for vision rotation
         double thetaStdDev =
             useVisionRotation
                  ? thetaStdDevCoefficient 
-                    * Math.pow(inputs[cameraNum].maxDistance, 2.0)
+                    * Math.pow(inputs[cameraNum].distToCamera, 2.0)
                     * stdDevFactors[cameraNum]
                 : Double.POSITIVE_INFINITY;
 

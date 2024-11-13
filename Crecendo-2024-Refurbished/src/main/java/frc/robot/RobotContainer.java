@@ -73,11 +73,7 @@ public class RobotContainer {
   // Assistance Subsystem declaration
   private static CatzLED          led = CatzLED.getInstance();
   private static CatzRobotTracker robotTracker = CatzRobotTracker.getInstance();
-  private static CatzVision       vision       = new CatzVision(new VisionIO[] {
-                                                              new VisionIOLimeLight("limelight-udon"),    //index 0 left
-                                                              new VisionIOLimeLight("limelight-soba"),    //index 1 right
-                                                              new VisionIOLimeLight("limelight-ramen")    //index 2 turret)
-                                                              });
+  private static CatzVision       vision       = new CatzVision();
   // Drive Controller Declaration
   private CommandXboxController xboxDrv = new CommandXboxController(0);
   private CommandXboxController xboxAux = new CommandXboxController(1);

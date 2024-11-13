@@ -158,7 +158,7 @@ public class DriveConstants {
             new PIDController(10.0, 0.0, 0.1), 
             new PIDController(10.0, 0.0, 0.1),
             new ProfiledPIDController(
-                10, 0, 0,
+                18, 0, 0,
                 new TrapezoidProfile.Constraints(driveConfig.maxAngularVelocity, driveConfig.maxAngularAcceleration)
             )
         );
