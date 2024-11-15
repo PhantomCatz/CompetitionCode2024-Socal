@@ -37,8 +37,8 @@ public class DriveConstants {
               .bumperWidthY(Units.inchesToMeters(33))
               .maxLinearVelocity(Units.feetToMeters(17))
               .maxLinearAcceleration(Units.feetToMeters(75.0)) 
-              .maxAngularVelocity(Units.degreesToRadians(720)) // Radians
-              .maxAngularAcceleration(Units.degreesToRadians(1000)) // Radians // TODO verify angle constraints
+              .maxAngularVelocity(12.0) // Radians
+              .maxAngularAcceleration(6.0) // Radians // TODO verify angle constraints
               .build();
       case SN1 ->
           new DriveConfig(

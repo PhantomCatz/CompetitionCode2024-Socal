@@ -2,6 +2,7 @@ package frc.robot.CatzSubsystems.DriveAndRobotOrientation.vision;
 
 import static frc.robot.CatzSubsystems.DriveAndRobotOrientation.vision.VisionConstants.*;
 
+import edu.wpi.first.math.geometry.Transform3d;
 import frc.robot.Utilities.LimelightHelpers;
 import frc.robot.Utilities.LimelightHelpers.RawDetection;
 
@@ -14,15 +15,15 @@ public class VisionIONeuralNetwork implements VisionIO {
      *
      * @param name Name of the limelight used, and should be configured in limelight software first
      */
-    public VisionIONeuralNetwork(String name, int id) {
+    public VisionIONeuralNetwork(String name, Transform3d transform3d) {
         LimelightHelpers.setPipelineIndex(name, LIMELIGHT_PIPLINE_APRILTAG);
 
-        LimelightHelpers.setCameraPose_RobotSpace(name, limelightTransform[id].getX(),
-                                                        limelightTransform[id].getY(),
-                                                        limelightTransform[id].getZ(),
-                                                        limelightTransform[id].getRotation().getX(),
-                                                        limelightTransform[id].getRotation().getY(),
-                                                        limelightTransform[id].getRotation().getZ()
+        LimelightHelpers.setCameraPose_RobotSpace(name, transform3d.getX(),
+                                                        transform3d.getY(),
+                                                        transform3d.getZ(),
+                                                        transform3d.getRotation().getX(),
+                                                        transform3d.getRotation().getY(),
+                                                        transform3d.getRotation().getZ()
 
         );
         LimelightHelpers.setStreamMode_Standard(name);

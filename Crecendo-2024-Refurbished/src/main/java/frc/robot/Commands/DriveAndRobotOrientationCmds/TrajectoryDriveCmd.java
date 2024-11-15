@@ -102,10 +102,6 @@ public class TrajectoryDriveCmd extends Command {
             usePath = path.flipPath();
         }
 
-        if(DriverStation.isAutonomous() && Robot.getAutoElapsedTime() < 1.0) { //Only reset position when in auto and in timer threshold
-            CatzRobotTracker.getInstance().resetPose(usePath.getPreviewStartingHolonomicPose());
-            System.out.println("Reset");
-        }
         this.trajectory = new PathPlannerTrajectory(
             usePath, 
             DriveConstants.

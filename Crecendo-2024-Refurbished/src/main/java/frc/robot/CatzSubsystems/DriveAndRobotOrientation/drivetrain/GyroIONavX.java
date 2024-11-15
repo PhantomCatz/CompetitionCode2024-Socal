@@ -18,6 +18,7 @@ public class GyroIONavX implements GyroIO {
             Thread.sleep(1000);
             navX.reset();
           } catch (Exception E) {
+            
           }
         }).start();
         navX.reset(); // implicitly sets the gyro to 0 heading
@@ -31,7 +32,7 @@ public class GyroIONavX implements GyroIO {
       inputs.gyroYawDegrees   = navX.getYaw();
       inputs.gyroRollDegrees  = navX.getRoll(); 
            
-      inputs.gyroYawVel     = navX.getRate();
+      inputs.gyroYawVel       = navX.getRate();
       inputs.gyroAccelX       = navX.getWorldLinearAccelX();
       inputs.gyroAccelY       = navX.getWorldLinearAccelY();
     }

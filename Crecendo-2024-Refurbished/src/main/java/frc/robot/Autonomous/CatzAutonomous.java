@@ -69,7 +69,7 @@ public class CatzAutonomous {
 
         CatzRobotTracker tracker = CatzRobotTracker.getInstance();
         HolonomicPathFollowerConfig config = new HolonomicPathFollowerConfig(
-            DriveConstants.driveConfig.maxLinearVelocity(), 
+            DriveConstants.driveConfig.maxLinearVelocity() / 2, 
             DriveConstants.driveConfig.driveBaseRadius(),   
             new ReplanningConfig()
         );

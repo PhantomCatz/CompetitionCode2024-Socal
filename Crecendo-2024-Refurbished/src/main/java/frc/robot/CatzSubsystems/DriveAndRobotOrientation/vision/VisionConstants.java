@@ -24,14 +24,13 @@ public class VisionConstants {
   public static final int LIMELIGHT_PIPLINE_APRILTAG = 0;
   public static final int LIMELIGHT_PIPLINE_NEURALNETWORK = 1;
 
-  public static final VisionIO[] limelights = new VisionIO[] {
-    new VisionIOLimeLight("limelight-udon", 0),    //index 0 left
-    new VisionIOLimeLight("limelight-soba", 1),    //index 1 right
-    new VisionIOLimeLight("limelight-ramen", 2)    //index 2 turret)
-  };
-
-  public static final Transform3d UDON_TRANSFORM = new Transform3d();
-
+  public static final Transform3d UDON_TRANSFORM = new Transform3d(0.0, 
+                                                                    0.0, 
+                                                                    0.0, 
+                                                                    new Rotation3d(
+                                                                      0.0, 0.0, 0.
+                                                                    )
+                                                                  );
 
   public static final Transform3d SOBA_TRANSFORM = new Transform3d(0.0, 
                                                                    0.0, 
@@ -41,7 +40,19 @@ public class VisionConstants {
                                                                     )
                                                     );
 
-  public static final Transform3d RAMEN_TRANSFORM = new Transform3d();
+  public static final Transform3d RAMEN_TRANSFORM = new Transform3d(0.0, 
+                                                                    0.0, 
+                                                                    0.0, 
+                                                                    new Rotation3d(
+                                                                      0.0, 0.0, 0.
+                                                                    )
+                                                                  );
+
+  public static final VisionIO[] limelights = new VisionIO[] {
+    new VisionIOLimeLight("limelight-udon", UDON_TRANSFORM),    //index 0 left
+    new VisionIONeuralNetwork("limelight-soba", RAMEN_TRANSFORM),    //index 1 right
+    new VisionIOLimeLight("limelight-ramen", RAMEN_TRANSFORM)    //index 2 turret)
+  };
 
   public static final Transform3d[] limelightTransform = new Transform3d[] {
     UDON_TRANSFORM,

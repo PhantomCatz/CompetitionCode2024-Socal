@@ -8,6 +8,7 @@ import java.util.function.Supplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.CatzRobotTracker;
@@ -33,15 +34,15 @@ public class VisionIOLimeLight implements VisionIO {
      *
      * @param name Name of the limelight used, and should be configured in limelight software first
      */
-    public VisionIOLimeLight(String name, int id) {
+    public VisionIOLimeLight(String name, Transform3d transform3d) {
         LimelightHelpers.setPipelineIndex(name, LIMELIGHT_PIPLINE_APRILTAG);
 
-        LimelightHelpers.setCameraPose_RobotSpace(name, limelightTransform[id].getX(),
-                                                        limelightTransform[id].getY(),
-                                                        limelightTransform[id].getZ(),
-                                                        limelightTransform[id].getRotation().getX(),
-                                                        limelightTransform[id].getRotation().getY(),
-                                                        limelightTransform[id].getRotation().getZ()
+        LimelightHelpers.setCameraPose_RobotSpace(name, transform3d.getX(),
+                                                        transform3d.getY(),
+                                                        transform3d.getZ(),
+                                                        transform3d.getRotation().getX(),
+                                                        transform3d.getRotation().getY(),
+                                                        transform3d.getRotation().getZ()
 
         );
         LimelightHelpers.setStreamMode_Standard(name);
@@ -78,12 +79,6 @@ public class VisionIOLimeLight implements VisionIO {
         inputs.tx = LimelightHelpers.getTX(name); //horizontal offset from crosshair to target
         inputs.ta = LimelightHelpers.getTA(name); //target area of the limelight from 0%-100%...how much does the apirltage take up on the frame
         inputs.primaryApriltagID = LimelightHelpers.getFiducialID(name);
-           
-        // collects pose information based off network tables and orients itself depending on alliance side
-        PoseEstimate visionEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(name);
-        inputs.isMegaTag2 = visionEstimate.isMegaTag2;
-        
-        inputs.tagCount = visionEstimate.tagCount;
 
         // calculates total latency using 7th table item in array 
         inputs.totalLatency = (LimelightHelpers.getLatency_Capture(name) + LimelightHelpers.getLatency_Pipeline(name)) / 1000; //data[6] or latency is recorded in ms; divide by 1000 to get s     
@@ -95,6 +90,11 @@ public class VisionIOLimeLight implements VisionIO {
             inputs.isNewVisionPose = true;
             
             //take new pose info from the limelight api
+            // collects pose information based off network tables and orients itself depending on alliance side
+            PoseEstimate visionEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(name);
+            inputs.isMegaTag2 = visionEstimate.isMegaTag2;
+            
+            inputs.tagCount = visionEstimate.tagCount;
             visionPose2d = visionEstimate.pose;
 
             //set a previous vision position depending on if we see an apriltag
