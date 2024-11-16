@@ -16,7 +16,7 @@ public class VisionIONeuralNetwork implements VisionIO {
      * @param name Name of the limelight used, and should be configured in limelight software first
      */
     public VisionIONeuralNetwork(String name, Transform3d transform3d) {
-        LimelightHelpers.setPipelineIndex(name, LIMELIGHT_PIPLINE_APRILTAG);
+        LimelightHelpers.setPipelineIndex(name, LIMELIGHT_PIPLINE_NEURALNETWORK);
 
         LimelightHelpers.setCameraPose_RobotSpace(name, transform3d.getX(),
                                                         transform3d.getY(),
@@ -29,26 +29,32 @@ public class VisionIONeuralNetwork implements VisionIO {
         LimelightHelpers.setStreamMode_Standard(name);
 
 
-        LimelightHelpers.setLEDMode_ForceBlink(name);
+        LimelightHelpers.setLEDMode_ForceOff(name);
         this.name = name;
         System.out.println("Limeilight " + name + " instantiated" + LimelightHelpers.getCurrentPipelineType(name));
     }
 
     @Override
     public void updateInputs(VisionIOInputs inputs) {
-        // Get raw neural detector results
-        RawDetection[] detections = LimelightHelpers.getRawDetections(name);
-        for (RawDetection detection : detections) {
-            inputs.classID = detection.classId;
-            inputs.txnc = detection.txnc;
-            inputs.tync = detection.tync;
-            inputs.ta = detection.ta;
-            // Access corner coordinates if needed
-            inputs.corner0X = detection.corner0_X;
-            inputs.corner0Y = detection.corner0_Y;
-            // ... corners 1-3 available similarly
+        System.out.println("hello");
+        if (LimelightHelpers.getTV(name)) {
+            System.out.println("detected");
+            inputs.tx = LimelightHelpers.getTX(name);
+            inputs.ty = LimelightHelpers.getTY(name);
+            inputs.ta = LimelightHelpers.getTA(name);
+
+
+        }
+        else {
+            System.out.println("not detected");
         }
 
 
     }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
 }
