@@ -220,7 +220,7 @@ public class TrajectoryDriveCmd extends Command {
         //Another condition to end trajectory. If end target velocity is zero, then only stop if the robot velocity is also near zero so it doesn't run over its target.
         double desiredMPS = trajectory.getEndState().velocityMps;
         ChassisSpeeds currentChassisSpeeds = tracker.getRobotChassisSpeeds();
-        double currentMPS = Math.hypot(currentChassisSpeeds.vxMetersPerSecond, currentChassisSpeeds.vyMetersPerSecond);
+        double currentMPS = Math.hypot(Math.hypot(currentChassisSpeeds.vxMetersPerSecond, currentChassisSpeeds.vyMetersPerSecond), currentChassisSpeeds.omegaRadiansPerSecond);
 
         double xError =        Math.abs(desiredPosX - currentPosX);
         double yError =        Math.abs(desiredPosY - currentPosY);

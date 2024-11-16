@@ -64,7 +64,7 @@ public class ModuleIORealFoc implements ModuleIO {
   public ModuleIORealFoc(ModuleConfig config) {
     m_config = config;
     // Init drive controllers from config constants
-    driveTalon = new TalonFX(config.driveID(), "*");
+    driveTalon = new TalonFX(config.driveID());
 
     // Restore Factory Defaults
     driveTalon.getConfigurator().apply(new TalonFXConfiguration());
@@ -170,7 +170,7 @@ public class ModuleIORealFoc implements ModuleIO {
 
   @Override
   public void runDriveVelocityRPSIO(double velocityMetersPerSec) {
-    driveTalon.setControl(velocityVoltage.withVelocity(velocityMetersPerSec));
+    driveTalon.setControl(velocityTorqueCurrentFOC.withVelocity(velocityMetersPerSec));
   }
 
   public void runSteerPercentOutput(double percentOutput) {

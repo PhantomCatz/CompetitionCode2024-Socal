@@ -27,6 +27,7 @@ import com.pathplanner.lib.util.ReplanningConfig;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -108,8 +109,7 @@ public class CatzAutonomous {
         //----------------------------------------------------------------------------------------
         NamedCommands.registerCommand("TestPrint", new PrintCommand("Benchmark"));
         NamedCommands.registerCommand("ReturnToScore", autoFindPathSpeaker());
-
-
+    
         //---------------------------------------------------------------------------
         // Far side auto Path Configuration
         //---------------------------------------------------------------------------
