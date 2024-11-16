@@ -22,7 +22,7 @@ public final class CatzConstants {
   //--------------------------------------------------/
   public static final RobotSenario robotSenario = RobotSenario.TUNING;
   public static final RobotHardwareMode hardwareMode = RobotHardwareMode.REAL;
-  private static RobotID robotType = RobotID.SN2;
+  private static RobotID robotType = RobotID.SN1;
   
   public static final double LOOP_TIME = 0.02;
 

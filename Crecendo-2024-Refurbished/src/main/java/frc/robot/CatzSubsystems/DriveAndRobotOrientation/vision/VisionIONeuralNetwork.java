@@ -16,7 +16,7 @@ public class VisionIONeuralNetwork implements VisionIO {
      * @param name Name of the limelight used, and should be configured in limelight software first
      */
     public VisionIONeuralNetwork(String name, Transform3d transform3d) {
-        LimelightHelpers.setPipelineIndex(name, LIMELIGHT_PIPLINE_NEURALNETWORK);
+        LimelightHelpers.setPipelineIndex(name, LIMELIGHT_PIPLINE_NEURALNETWORK_YELLOW);
 
         LimelightHelpers.setCameraPose_RobotSpace(name, transform3d.getX(),
                                                         transform3d.getY(),
@@ -36,9 +36,7 @@ public class VisionIONeuralNetwork implements VisionIO {
 
     @Override
     public void updateInputs(VisionIOInputs inputs) {
-        System.out.println("hello");
         if (LimelightHelpers.getTV(name)) {
-            System.out.println("detected");
             inputs.tx = LimelightHelpers.getTX(name);
             inputs.ty = LimelightHelpers.getTY(name);
             inputs.ta = LimelightHelpers.getTA(name);
@@ -46,7 +44,7 @@ public class VisionIONeuralNetwork implements VisionIO {
 
         }
         else {
-            System.out.println("not detected");
+
         }
 
 
