@@ -37,13 +37,8 @@ public class DriveConstants {
               .bumperWidthY(Units.inchesToMeters(33))
               .maxLinearVelocity(Units.feetToMeters(17))
               .maxLinearAcceleration(Units.feetToMeters(75.0)) 
-<<<<<<< Updated upstream
-              .maxAngularVelocity(12.0) // Radians
-              .maxAngularAcceleration(6.0) // Radians // TODO verify angle constraints
-=======
               .maxAngularVelocity(Units.degreesToRadians(600)) // Radians
               .maxAngularAcceleration(Units.degreesToRadians(600)) // Radians // TODO verify angle constraints
->>>>>>> Stashed changes
               .build();
       case SN1 ->
           new DriveConfig(
@@ -142,7 +137,7 @@ public class DriveConstants {
     //
     //-----------------------------------------------------------------------------------------------------------------------------
     public static final PathConstraints autoPathfindingConstraints = new PathConstraints( // 540 // 720 
-                                                                    1.0, driveConfig.maxLinearAcceleration, 
+                                                                    2.0, driveConfig.maxLinearAcceleration, //max vel causing messup
                                                                     driveConfig.maxAngularVelocity, driveConfig.maxAngularAcceleration);
 
 
@@ -163,11 +158,7 @@ public class DriveConstants {
             new PIDController(10.0, 0.0, 0.1), 
             new PIDController(10.0, 0.0, 0.1),
             new ProfiledPIDController(
-<<<<<<< Updated upstream
-                18, 0, 0,
-=======
                 6, 0, 0,
->>>>>>> Stashed changes
                 new TrapezoidProfile.Constraints(driveConfig.maxAngularVelocity, driveConfig.maxAngularAcceleration)
             )
         );

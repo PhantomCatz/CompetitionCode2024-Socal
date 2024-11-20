@@ -18,6 +18,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.EventMarker;
 import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.PathPlannerTrajectory;
@@ -33,7 +34,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.RobotContainer;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.CatzRobotTracker;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain.DriveConstants;
@@ -102,7 +105,11 @@ public class CatzAutonomous {
             //to get rid of the extensions trailing the path names
             String pathName = pathFile.getName().replaceFirst("[.][^.]+$", ""); 
             PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
-            NamedCommands.registerCommand(pathName, new TrajectoryDriveCmd(path, container.getCatzDrivetrain()));
+            List<EventMarker> eventMarkers = path.getEventMarkers();
+            NamedCommands.registerCommand(pathName, new ParallelCommandGroup(
+                                                            new TrajectoryDriveCmd(path, container.getCatzDrivetrain()),
+                                                            new EventMarkerHelperCmd(eventMarkers, path.getAllPathPoints())
+                                                    ));
         }
         //----------------------------------------------------------------------------------------
         //  Named Command registration
@@ -204,27 +211,18 @@ public class CatzAutonomous {
 
     //Automatic pathfinding command
     public Command autoFindPathAmp() {
-        List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
-                new Pose2d(1.89, 6.29, Rotation2d.fromDegrees(90)),
-                new Pose2d(1.89, 7.76, Rotation2d.fromDegrees(90))
-                    );
+        return Commands.either(
+            AutoBuilder.pathfindToPoseFlipped(new Pose2d(1.89, 7.76, Rotation2d.fromDegrees(90)), DriveConstants.autoPathfindingConstraints), 
+            AutoBuilder.pathfindToPose(new Pose2d(1.89, 7.76, Rotation2d.fromDegrees(90)), DriveConstants.autoPathfindingConstraints), 
+            ()->AllianceFlipUtil.shouldFlipToRed());
 
-        //send path info to trajectory following command
-        return new TrajectoryDriveCmd(bezierPoints, 
-                                      DriveConstants.autoPathfindingConstraints, 
-                                      new GoalEndState(0.0, Rotation2d.fromDegrees(90)), m_container.getCatzDrivetrain(), 2);
     }
 
     public Command autoFindPathSpeaker() {
-        List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
-                new Pose2d(4.36, 6.14, Rotation2d.fromDegrees(180)),
-                new Pose2d(2.74, 6.14, Rotation2d.fromDegrees(180))
-                    );
-
-        //send path info to trajectory following command
-        return new TrajectoryDriveCmd(bezierPoints, 
-                                      DriveConstants.autoPathfindingConstraints, 
-                                      new GoalEndState(0.0, Rotation2d.fromDegrees(200)), m_container.getCatzDrivetrain(), 2);
+        return Commands.either(
+            AutoBuilder.pathfindToPoseFlipped(new Pose2d(2.74, 6.14, Rotation2d.fromDegrees(180)), DriveConstants.autoPathfindingConstraints), 
+            AutoBuilder.pathfindToPose(new Pose2d(2.74, 6.14, Rotation2d.fromDegrees(180)), DriveConstants.autoPathfindingConstraints), 
+            ()->AllianceFlipUtil.shouldFlipToRed());
     }
 
     //---------------------------------------------------------------------------------------------------------

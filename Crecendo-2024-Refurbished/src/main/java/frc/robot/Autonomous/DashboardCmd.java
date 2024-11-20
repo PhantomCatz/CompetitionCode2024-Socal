@@ -30,10 +30,21 @@ public class DashboardCmd extends Command{
     public void initialize(){
         isCommandSkipped = false;
         try {
-            chooser.getSelected().schedule();
+            // forces all logic of the command to be located within this class
+            // scheduling the command to run outside of this class will cause commands to finish too early
+            chooser.getSelected().initialize();
         } catch (Exception e) {
             System.out.println("Command Skipped due to uninitialization");
             isCommandSkipped = true;
+        }
+    }
+
+    @Override
+    public void execute() {
+        if(isCommandSkipped == true) {
+            end(true);
+        } else {
+            chooser.getSelected().execute();
         }
     }
 

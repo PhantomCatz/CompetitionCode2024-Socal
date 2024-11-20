@@ -116,6 +116,7 @@ public class TrajectoryDriveCmd extends Command {
     @Override
     public void execute() {
         double currentTime = this.timer.get();
+        CatzRobotTracker.getInstance().setTrajectoryAmtCompleted(currentTime/trajectory.getTotalTimeSeconds());
 
         // Trajectory Executor
         if(!atTarget){
@@ -149,36 +150,6 @@ public class TrajectoryDriveCmd extends Command {
         }else{
             m_driveTrain.stopDriving();
         }
-
-
-        // Command Executer
-        if(!waypointsRatios.isEmpty()) {
-            if(numConsecutiveWaypointCounter < waypointsRatios.size()) {
-                scaledWaypointTime = waypointsRatios.get(numConsecutiveWaypointCounter);  
-                cmd = m_commands.get(numConsecutiveWaypointCounter);   
-                if(executing == false) {
-                    if(currentTime > scaledWaypointTime){
-                        executing = true;
-                        cmd.initialize();
-                        System.out.println(scaledWaypointTime);
-
-                    }
-                }
-            
-
-                if(executing) {
-                    m_commands.get(numConsecutiveWaypointCounter).execute();
-                    if(cmd.isFinished() || (currentTime >= scaledWaypointTime + 2.0)){
-                        done = true;
-                        cmd.end(true);
-                        executing = false;
-                        numConsecutiveWaypointCounter++;
-                    }
-                }
-            }
-        }
-
-
 
     }
 

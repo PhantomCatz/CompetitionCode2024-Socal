@@ -62,6 +62,9 @@ public class CatzRobotTracker {
   private Pose2d odometryPose = new Pose2d();
   private Pose2d estimatedPose = new Pose2d();
   private Pose2d trajectorySetpointPose = new Pose2d();
+  @AutoLogOutput @Getter @Setter private double trajectoryAmtCompleted = 0.0;
+
+  
   private final TimeInterpolatableBuffer<Pose2d> poseBuffer = TimeInterpolatableBuffer.createBuffer(poseBufferSizeSeconds);
   @Getter @Setter private Pose2d trajectorySetpoint = new Pose2d();
   private final Matrix<N3, N1> qStdDevs = new Matrix<>(Nat.N3(), Nat.N1());
