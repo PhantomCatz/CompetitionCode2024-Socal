@@ -90,9 +90,7 @@ public class VisionIOLimeLight implements VisionIO {
             // collects pose information based off network tables and orients itself depending on alliance side
             LimelightHelpers.SetRobotOrientation(name, gyroYaw.get(), 0.0, 0.0, 0.0, 0.0, 0.0);
             PoseEstimate visionEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(name);
-            System.out.println("True, " + visionEstimate);
             inputs.isMegaTag2 = visionEstimate.isMegaTag2;
-            System.out.println(visionEstimate.pose);
             inputs.tagCount = visionEstimate.tagCount;
             visionPose2d = visionEstimate.pose;
 
