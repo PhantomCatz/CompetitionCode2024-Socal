@@ -116,6 +116,7 @@ public class CatzAutonomous {
         //----------------------------------------------------------------------------------------
         NamedCommands.registerCommand("TestPrint", new PrintCommand("Benchmark"));
         NamedCommands.registerCommand("ReturnToScore", autoFindPathSpeaker());
+        NamedCommands.registerCommand("Intake", AutomatedSequenceCmds.noteDetectIntakeToShooter(container));
     
         //---------------------------------------------------------------------------
         // Far side auto Path Configuration
@@ -150,6 +151,12 @@ public class CatzAutonomous {
         moveOptions.put("Spin", NamedCommands.getCommand("TurnStraight"));
         moveOptions.put("Move", NamedCommands.getCommand("DriveStraight"));
         dashboardCmds.put("SpinOrMove", new DashboardCmd("Spin or Move?", moveOptions));
+
+        //---------------------------------------
+        HashMap<String, Command> pathOptions = new HashMap<>();
+        pathOptions.put("CurveTurn", NamedCommands.getCommand("CurveTurn"));
+        pathOptions.put("DriveStraight", NamedCommands.getCommand("DriveStraight"));
+        dashboardCmds.put("CurveOrStraight", new DashboardCmd("Curve or Turn?", pathOptions));
 
         dashboardCmds.forEach((k, v) -> {
             NamedCommands.registerCommand(k, v);
