@@ -43,17 +43,9 @@ public class EventMarkerHelperCmd extends Command {
       boolean hasEventTriggered = hasEventTriggered(i);
       if(hasEventTriggered) {
         try {
-          if(alreadyInitializedList.get(i) == false) {
             // forces all logic of the command to be located within this class
             // scheduling the command to run outside of this class will cause commands to finish too early
-            eventMarkers.get(i).getCommand().initialize();
-            alreadyInitializedList.set(i, true);
-          } 
-
-          if(alreadyInitializedList.get(i) == true) {
-            eventMarkers.get(i).getCommand().execute();
-          }
-
+            eventMarkers.get(i).getCommand().schedule();
         } catch (Exception e) {
             System.out.println("Event Command Skipped due to uninitialization");
             isCommandSkipped = true;

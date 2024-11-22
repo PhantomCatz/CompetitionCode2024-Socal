@@ -231,7 +231,6 @@ public class CatzAutonomous {
             AutoBuilder.pathfindToPose(new Pose2d(2.74, 6.14, Rotation2d.fromDegrees(180)), DriveConstants.autoPathfindingConstraints), 
             ()->AllianceFlipUtil.shouldFlipToRed());
     }
-
     //---------------------------------------------------------------------------------------------------------
     //
     //          Trajectory Helpers
@@ -248,7 +247,6 @@ public class CatzAutonomous {
                 CatzRobotTracker.getInstance().getEstimatedPose().getRotation());
         }
     }
-
     /** Getter for final autonomous routine */
     public Command getCommand() { 
         return autoPathChooser.get();

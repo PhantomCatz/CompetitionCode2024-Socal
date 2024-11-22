@@ -36,9 +36,7 @@ public class VisionIONeuralNetwork implements VisionIO {
 
     @Override
     public void updateInputs(VisionIOInputs inputs) {
-        System.out.println("hello");
         if (LimelightHelpers.getTV(name)) {
-            System.out.println("detected");
             inputs.tx = LimelightHelpers.getTX(name);
             inputs.ty = LimelightHelpers.getTY(name);
             inputs.ta = LimelightHelpers.getTA(name);
@@ -46,7 +44,6 @@ public class VisionIONeuralNetwork implements VisionIO {
 
         }
         else {
-            System.out.println("not detected");
         }
 
 

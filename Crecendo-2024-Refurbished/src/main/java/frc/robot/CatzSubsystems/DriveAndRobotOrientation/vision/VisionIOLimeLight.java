@@ -50,7 +50,6 @@ public class VisionIOLimeLight implements VisionIO {
         LimelightHelpers.setLEDMode_ForceBlink(name);
         this.name = name;
         System.out.println("Limeilight " + name + " instantiated" + LimelightHelpers.getCurrentPipelineType(name));
-        
     }
 
     @Override
