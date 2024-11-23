@@ -27,6 +27,10 @@ public class CatzIntakeRollers extends SubsystemBase {
   // MISC variables
   public TargetSpeed recordTargetSpeed = TargetSpeed.IDLE;
 
+  private boolean hasGamePiecePassedIterations = false;
+  private int numConsecutiveIterations = 0;
+
+
   // State Machine Variables
   @RequiredArgsConstructor // TODO change intake speed to seperate
   public enum TargetSpeed { 
@@ -73,6 +77,8 @@ public class CatzIntakeRollers extends SubsystemBase {
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("inputs/IntakeRollers", inputs);
+
+    countUpIterations();
   }
 
   //-----------------------------------------------------------------------------------------
@@ -81,13 +87,27 @@ public class CatzIntakeRollers extends SubsystemBase {
   //
   //-----------------------------------------------------------------------------------------
   public boolean isNoteInIntake() {
-    boolean isNoteInIntake = inputs.isFrontBeambreakBroken;
+    boolean isNoteInIntake = hasGamePiecePassedIterations;
     CatzLED.getInstance().hasNoteAmp = isNoteInIntake;
     return isNoteInIntake;
   }
 
+  public void countUpIterations() {
+    if(inputs.rollerTorqueCurrentAmps > 40.0 && inputs.rollerTorqueCurrentAmps < 60.0) {
+      numConsecutiveIterations++;
+    }
+    hasGamePiecePassedIterations = numConsecutiveIterations > 10;
+
+    Logger.recordOutput("IntakeRollers/counter", numConsecutiveIterations);
+    Logger.recordOutput("IntakeRollers/in Current Range", inputs.rollerTorqueCurrentAmps > 40.0 && inputs.rollerTorqueCurrentAmps < 60.0);
+    Logger.recordOutput("IntakeRollers/is noteIntook Holding", hasGamePiecePassedIterations);
+    
+  }
+
   private void setTargetRollerSpeed(TargetSpeed targetSpeed) {
     io.runDutycycle(targetSpeed.getRollerSpeed());
+      hasGamePiecePassedIterations = false;
+      numConsecutiveIterations = 0;
   }
 
   //-----------------------------------------------------------------------------------------

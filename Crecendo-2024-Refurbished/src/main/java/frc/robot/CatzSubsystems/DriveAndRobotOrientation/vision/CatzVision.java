@@ -123,7 +123,7 @@ public class CatzVision extends SubsystemBase {
         this.useSingleTag = useSingleTag;
         this.acceptableTagID = acceptableTagID;
     }
-
+    
     
     public double getOffsetX(int cameraNum) {
         return inputs[cameraNum].tx;
@@ -131,6 +131,10 @@ public class CatzVision extends SubsystemBase {
 
     public double getOffsetY(int cameraNum) {
         return inputs[cameraNum].ty;
+    }
+
+    public double getTargetArea(int cameraNum) {
+        return inputs[cameraNum].ta;
     }
 
     public double getAprilTagID(int cameraNum) {

@@ -46,6 +46,7 @@ import frc.robot.CatzSubsystems.SuperSubsystem.ShooterPivot.CatzShooterPivot.Sho
 import frc.robot.CatzSubsystems.SuperSubsystem.ShooterTurret.CatzShooterTurret;
 import frc.robot.Commands.AutomatedSequenceCmds;
 import frc.robot.Commands.ControllerModeAbstraction;
+import frc.robot.Commands.DetectAndDriv;
 import frc.robot.Commands.DriveAndRobotOrientationCmds.FaceTarget;
 import frc.robot.Commands.DriveAndRobotOrientationCmds.TeleopDriveCmd;
 import frc.robot.Commands.DriveAndRobotOrientationCmds.TrajectoryDriveCmd;
@@ -146,8 +147,8 @@ public class RobotContainer {
     
     xboxAux.rightBumper().whileTrue(rollers.setRollersIn());
 
-    xboxAux.leftBumper().onTrue(rollers.setRollersOut().withTimeout(0.3)
-                                                       .andThen(superstructure.setSuperStructureState(SuperstructureState.SCORE_AMP_PART_2)));
+    xboxAux.leftBumper().onTrue(rollers.setRollersOut());
+                                                      // .andThen(superstructure.setSuperStructureState(SuperstructureState.SCORE_AMP_PART_2)));
                                                       //  .unless(()->!superstructure.isPreviousSuperSubsystemStateScoreAmp()))
                                                       //   );
     xboxAux.leftBumper().and(xboxAux.rightBumper()).whileTrue(rollers.setRollersOff());
@@ -160,7 +161,7 @@ public class RobotContainer {
 
     // Auto Driving
     xboxDrv.y().onTrue(new FaceTarget(FieldConstants.Speaker.centerSpeakerOpening.toTranslation2d(), drive));
-    xboxDrv.b().onTrue(auto.autoFindPathAmp());
+    xboxDrv.b().onTrue(new DetectAndDriv(drive));
     xboxDrv.x().onTrue(auto.autoFindPathSpeaker());
     xboxDrv.a().onTrue(superstructure.setSuperStructureState(SuperstructureState.STOW));
 

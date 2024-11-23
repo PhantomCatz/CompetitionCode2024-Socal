@@ -175,7 +175,6 @@ public class CatzDrivetrain extends SubsystemBase {
                 ? Math.toRadians(gyroInputs.gyroYawVel)
                 : robotRelativeVelocity.dtheta;
         CatzRobotTracker.getInstance().addVelocityData(robotRelativeVelocity);
-
    
        
         // Logging

@@ -10,7 +10,7 @@ import frc.robot.RobotContainer;
 
 public class ControllerModeAbstraction {
     
-    private static boolean m_isModeSpeaker;    
+    private static boolean m_isModeSpeaker = true;    
     public static boolean isModeSpeaker() {
         return m_isModeSpeaker;
     }
@@ -23,7 +23,7 @@ public class ControllerModeAbstraction {
         return Commands.either(
             AutomatedSequenceCmds.transferNoteToShooter(container), 
             AutomatedSequenceCmds.transferNoteToIntake(container), 
-            ()->isModeSpeaker());
+            ()->isModeSpeaker()).alongWith(Commands.print("HELLO"));
     }
 
     public static Command robotScore(RobotContainer container, Supplier<Boolean> override) {

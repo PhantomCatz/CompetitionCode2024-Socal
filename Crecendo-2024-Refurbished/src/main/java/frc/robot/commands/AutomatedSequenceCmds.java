@@ -28,7 +28,7 @@ public class AutomatedSequenceCmds {
         // return command sequence
         return new SequentialCommandGroup(
             new ParallelCommandGroup(
-                superstructure.setSuperStructureState(SuperstructureState.INTAKE_GROUND), // Until Intake has made it to final ground pos
+                superstructure.setSuperStructureState(SuperstructureState.INTAKE_GROUND).alongWith(Commands.print("Hi")), // Until Intake has made it to final ground pos
                 rollers.setRollersIn()
             ).until(() -> rollers.isNoteInIntake()), // Until Intake Rollers have detected note,
             transferNoteToShooter(container) //Stow is already called in method

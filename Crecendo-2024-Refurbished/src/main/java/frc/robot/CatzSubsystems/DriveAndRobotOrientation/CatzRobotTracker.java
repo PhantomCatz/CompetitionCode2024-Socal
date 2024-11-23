@@ -96,6 +96,17 @@ public class CatzRobotTracker {
   private ChassisSpeeds m_lastChassisSpeeds = new ChassisSpeeds();
 
   @Setter private BooleanSupplier lookaheadDisable = () -> false;
+
+  //------------------------------------------------------------------------------------------------------
+  //
+  //  Pose estimation Members
+  //
+  //------------------------------------------------------------------------------------------------------
+  @Getter @Setter private double detectorCameraOffsetX;
+
+  @Getter @Setter private double detectorCameraOffsetY;
+
+  @Getter @Setter private double detectorCameraTargetArea;
   //------------------------------------------------------------------------------------------------------
   //
   //  Constructor

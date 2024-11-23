@@ -40,8 +40,6 @@ public class VisionIONeuralNetwork implements VisionIO {
             inputs.tx = LimelightHelpers.getTX(name);
             inputs.ty = LimelightHelpers.getTY(name);
             inputs.ta = LimelightHelpers.getTA(name);
-
-
         }
         else {
 
