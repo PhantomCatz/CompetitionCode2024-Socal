@@ -115,6 +115,9 @@ public class Robot extends LoggedRobot {
   String dateFormatted = sdf.format(date);
   private final Alert lastDeploymentAlert = new Alert("Last Deployment: " + dateFormatted , AlertType.INFO);
 
+  // reset Position Logging
+  public static boolean isResetPositionUsedInAuto = false;
+
 
 
   @Override
@@ -339,7 +342,9 @@ public class Robot extends LoggedRobot {
   }
   
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    isResetPositionUsedInAuto = false;
+  }
 
   @Override
   public void disabledPeriodic() {
@@ -361,7 +366,6 @@ public class Robot extends LoggedRobot {
     lastDeploymentAlert.set(true);
     autoStart = Timer.getFPGATimestamp();
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
-    // m_autonomousCommand = m_robotContainer.getQuestionaire().getSelectedPath();
 
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();

@@ -51,17 +51,6 @@ public class TrajectoryDriveCmd extends Command {
     public static double pathTimeOut = -999.0;
 
 
-    //Command inside trajectory helper variables
-    private List<Double> waypointsRatios = Arrays.asList();
-    private List<Command> m_commands     = Arrays.asList();
-    private int numConsecutiveWaypointCounter = 0;
-    private double scaledWaypointTime = 0.0;
-    private Command cmd = new InstantCommand();
-
-
-    private boolean executing = false;
-    private boolean done = false;
-
     //Constructor Logger
     private int m_constructorLogger = 1; // For determining if the command is auto path find or autonomous
 
@@ -138,8 +127,8 @@ public class TrajectoryDriveCmd extends Command {
     
             //construct chassisspeeds
             ChassisSpeeds adjustedSpeeds = hocontroller.calculate(currentPose, state, targetOrientation);
-            // System.out.println(adjustedSpeeds.vxMetersPerSecond);
             //send to drivetrain
+
             m_driveTrain.drive(adjustedSpeeds);
             tracker.addTrajectorySetpointData(goal.getTargetHolonomicPose());
 

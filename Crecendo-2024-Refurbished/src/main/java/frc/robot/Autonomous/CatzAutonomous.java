@@ -71,13 +71,13 @@ public class CatzAutonomous {
 
         this.m_container = container;
 
+        // Path follwing setup
         CatzRobotTracker tracker = CatzRobotTracker.getInstance();
         HolonomicPathFollowerConfig config = new HolonomicPathFollowerConfig(
             DriveConstants.driveConfig.maxLinearVelocity() / 2, 
             DriveConstants.driveConfig.driveBaseRadius(),   
             new ReplanningConfig()
         );
-        
         BooleanSupplier shouldFlip = ()->AllianceFlipUtil.shouldFlipToRed();
         AutoBuilder.configureHolonomic(
             tracker::getEstimatedPose,
@@ -172,7 +172,7 @@ public class CatzAutonomous {
     public void updateQuestionaire(){
         try {
             String autoName = autoPathChooser.get().getName() + ".auto";
-            JSONObject json = (JSONObject) parser.parse(new FileReader(Filesystem.getDeployDirectory()+"/pathplanner/autos/"+autoName));
+            JSONObject json = (JSONObject) parser.parse(new FileReader(Filesystem.getDeployDirectory()+"/pathplanner/autos/" + autoName));
 
             if (!autoName.equals(lastAutoName)){
                 lastAutoName = autoName;
