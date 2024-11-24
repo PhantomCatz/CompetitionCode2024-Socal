@@ -30,6 +30,8 @@ import frc.robot.Utilities.NoteVisualizer;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
+
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.ExtensionMethod;
@@ -47,6 +49,7 @@ public class CatzRobotTracker {
   private static final LoggedTunableNumber closeShootingZoneFeet = new LoggedTunableNumber("CatzRobotTracker/CloseShootingZoneFeet", 10.0);
 
   private static final double poseBufferSizeSeconds = 2.0;
+
 
   private static CatzRobotTracker instance;
   public static CatzRobotTracker getInstance() {
