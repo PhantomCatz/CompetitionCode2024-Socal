@@ -17,7 +17,7 @@ import org.littletonrobotics.junction.Logger;
 
 public class WheelRadiusCharacterization extends Command {
   private static final LoggedTunableNumber characterizationSpeed =
-      new LoggedTunableNumber("WheelRadiusCharacterization/SpeedRadsPerSec", 0.1);
+      new LoggedTunableNumber("WheelRadiusCharacterization/SpeedRadsPerSec", 1);
   private static final double driveRadius = DriveConstants.driveConfig.driveBaseRadius();
   private static final DoubleSupplier gyroYawRadsSupplier =
       () -> CatzRobotTracker.getInstance().getEstimatedPose().getRotation().getRadians();
@@ -62,10 +62,11 @@ public class WheelRadiusCharacterization extends Command {
   public void execute() {
     // Run drive at velocity
     drive.runWheelRadiusCharacterization(
-        omegaLimiter.calculate(omegaDirection.value * characterizationSpeed.get()));
+        omegaLimiter.calculate(omegaDirection.value * characterizationSpeed.get())
+    );
 
     // Get yaw and wheel positions
-    accumGyroYawRads += MathUtil.angleModulus(gyroYawRadsSupplier.getAsDouble() - lastGyroYawRads);
+    accumGyroYawRads += Math.abs(MathUtil.angleModulus(gyroYawRadsSupplier.getAsDouble() - lastGyroYawRads));
     lastGyroYawRads = gyroYawRadsSupplier.getAsDouble();
     double averageWheelPosition = 0.0;
     double[] wheelPositiions = drive.getWheelRadiusCharacterizationPosition();
@@ -74,17 +75,18 @@ public class WheelRadiusCharacterization extends Command {
     }
     averageWheelPosition /= 4.0;
 
+    // wheel radius (meters) = gyro delta (radians) * drive base radius (meters) / wheel position delta (radians)
     currentEffectiveWheelRadius = (accumGyroYawRads * driveRadius) / averageWheelPosition;
-    // Logger.recordOutput("Drive/RadiusCharacterization/DrivePosition", averageWheelPosition);
-    // Logger.recordOutput("Drive/RadiusCharacterization/AccumGyroYawRads", accumGyroYawRads);
-    // Logger.recordOutput(
-        // "Drive/RadiusCharacterization/CurrentWheelRadiusInches",
-        // Units.metersToInches(currentEffectiveWheelRadius));
+    Logger.recordOutput("Drive/RadiusCharacterization/DrivePosition", averageWheelPosition);
+    Logger.recordOutput("Drive/RadiusCharacterization/AccumGyroYawRads", accumGyroYawRads);
+    Logger.recordOutput(
+        "Drive/RadiusCharacterization/CurrentWheelRadiusInches",
+        Units.metersToInches(currentEffectiveWheelRadius));
   }
 
   @Override
   public void end(boolean interrupted) {
-    drive.endCharacterization();
+    drive.stopDriving();
     if (accumGyroYawRads <= Math.PI * 2.0) {
       System.out.println("Not enough data for characterization");
     } else {

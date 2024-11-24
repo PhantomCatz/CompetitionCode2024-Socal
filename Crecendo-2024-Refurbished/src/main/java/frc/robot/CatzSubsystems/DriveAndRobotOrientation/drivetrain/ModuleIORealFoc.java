@@ -52,6 +52,7 @@ public class ModuleIORealFoc implements ModuleIO {
   private final VoltageOut voltageControl = new VoltageOut(0).withUpdateFreqHz(0);
   private final TorqueCurrentFOC currentControl = new TorqueCurrentFOC(0).withUpdateFreqHz(0);
   private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC = new VelocityTorqueCurrentFOC(0).withUpdateFreqHz(0);
+  private final VelocityVoltage velocityVoltage = new VelocityVoltage(0).withUpdateFreqHz(0);
   private final PositionTorqueCurrentFOC positionControl = new PositionTorqueCurrentFOC(0).withUpdateFreqHz(0);
   private final NeutralOut neutralControl = new NeutralOut().withUpdateFreqHz(0);
   private final PIDController steerFeedback = new PIDController(moduleGainsAndRatios.steerkP(), 0.0, moduleGainsAndRatios.steerkD());
@@ -143,6 +144,7 @@ public class ModuleIORealFoc implements ModuleIO {
 
     // Refresh steer Motor Values
     inputs.isSteerMotorConnected   = true;
+    inputs.steerAbsoluteEncPosition = Rotation2d.fromRotations(steerAbsoluteMagEnc.getAbsolutePosition());
     inputs.steerAbsolutePosition   = Rotation2d.fromRotations(steerAbsoluteMagEnc.getAbsolutePosition() - absoluteEncoderOffset.getRotations());
     inputs.steerPosition           = Rotation2d.fromRotations(steerSparkMax.getEncoder().getPosition());
     inputs.steerVelocityRadsPerSec = Units.rotationsToRadians(steerSparkMax.getEncoder().getVelocity());

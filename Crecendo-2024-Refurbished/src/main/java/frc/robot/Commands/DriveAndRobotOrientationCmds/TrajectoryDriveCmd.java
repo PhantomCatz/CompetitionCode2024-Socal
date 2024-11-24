@@ -41,6 +41,7 @@ public class TrajectoryDriveCmd extends Command {
     private CatzDrivetrain m_driveTrain;
     private PathPlannerTrajectory trajectory;
     private HolonomicDriveController hocontroller;
+    private CatzRobotTracker tracker = CatzRobotTracker.getInstance();
     
     private final Timer timer = new Timer();
     private final double TIMEOUT_SCALAR = 5;
@@ -52,7 +53,6 @@ public class TrajectoryDriveCmd extends Command {
 
     //Constructor Logger
     private int m_constructorLogger = 1; // For determining if the command is auto path find or autonomous
-
 
     /**
      * @param drivetrain           The coordinator between the gyro and the swerve modules.
@@ -81,37 +81,30 @@ public class TrajectoryDriveCmd extends Command {
     @Override
     public void initialize() {
         timer.reset();
-        timer.start();
-
-        //it is necessary to make a new instance of holonomic controller to clear the memory so kD doesn't explode in the first frame due to discontinuous function
-        hocontroller = DriveConstants.getNewHolController();
+        timer.start();        
         
         PathPlannerPath usePath = path;
         if(AllianceFlipUtil.shouldFlipToRed()) {
             usePath = path.flipPath();
         }
 
-        if(!Robot.isResetPositionUsedInAuto && DriverStation.isAutonomous()) {
-            CatzRobotTracker.getInstance().resetPosition(usePath.getPreviewStartingHolonomicPose());
-        }
-
         this.trajectory = new PathPlannerTrajectory(
             usePath, 
             DriveConstants.
                 swerveDriveKinematics.
-                    toChassisSpeeds(CatzRobotTracker.getInstance().getRobotSwerveModuleStates()),
-            CatzRobotTracker.getInstance().getRobotRotation()
+                    toChassisSpeeds(tracker.getCurrentModuleStates()),
+            tracker.getEstimatedPose().getRotation()
         );
-                                               
+
+        tracker.resetPose(usePath.getPreviewStartingHolonomicPose());
+        hocontroller = DriveConstants.getNewHolController();                                
         pathTimeOut = trajectory.getTotalTimeSeconds() * TIMEOUT_SCALAR; //TODO do we still need this
-        numConsecutiveWaypointCounter = 0;
-        scaledWaypointTime = 0.0;
-        executing = false;
     }
 
     @Override
     public void execute() {
         double currentTime = this.timer.get();
+        tracker.setTrajectoryAmtCompleted(currentTime/trajectory.getTotalTimeSeconds());
 
         // Trajectory Executor
         if(!atTarget){
@@ -119,7 +112,7 @@ public class TrajectoryDriveCmd extends Command {
             // Getters from pathplanner and current robot pose
             PathPlannerTrajectory.State goal = trajectory.sample(Math.min(currentTime, trajectory.getTotalTimeSeconds()));
             Rotation2d targetOrientation     = goal.targetHolonomicRotation;
-            Pose2d currentPose               = CatzRobotTracker.getInstance().getEstimatedPose();
+            Pose2d currentPose               = tracker.getEstimatedPose();
                 
             /* 
             * Convert PP trajectory into a wpilib trajectory type 
@@ -137,7 +130,7 @@ public class TrajectoryDriveCmd extends Command {
             //send to drivetrain
 
             m_driveTrain.drive(adjustedSpeeds);
-            CatzRobotTracker.getInstance().addTrajectorySetpointData(goal.getTargetHolonomicPose());
+            tracker.addTrajectorySetpointData(goal.getTargetHolonomicPose());
 
             Logger.recordOutput("CatzRobotTracker/Desired Auto Pose", new Pose2d(state.poseMeters.getTranslation(), goal.targetHolonomicRotation));
 
@@ -145,7 +138,6 @@ public class TrajectoryDriveCmd extends Command {
         }else{
             m_driveTrain.stopDriving();
         }
-
 
     }
 
@@ -167,14 +159,13 @@ public class TrajectoryDriveCmd extends Command {
     public void end(boolean interrupted) {
         timer.stop(); // Stop timer
         m_driveTrain.stopDriving();
-        System.out.println("trajectory done");
+       // System.out.println("trajectory done");
     }
 
     @Override
     public boolean isFinished() {
         // Finish command if the total time the path takes is over
         State endState = trajectory.getEndState();
-        CatzRobotTracker tracker = CatzRobotTracker.getInstance();
 
         double currentPosX =        tracker.getEstimatedPose().getX();
         double currentPosY =        tracker.getEstimatedPose().getY();
@@ -187,7 +178,7 @@ public class TrajectoryDriveCmd extends Command {
         //Another condition to end trajectory. If end target velocity is zero, then only stop if the robot velocity is also near zero so it doesn't run over its target.
         double desiredMPS = trajectory.getEndState().velocityMps;
         ChassisSpeeds currentChassisSpeeds = tracker.getRobotChassisSpeeds();
-        double currentMPS = Math.hypot(currentChassisSpeeds.vxMetersPerSecond, currentChassisSpeeds.vyMetersPerSecond);
+        double currentMPS = Math.hypot(Math.hypot(currentChassisSpeeds.vxMetersPerSecond, currentChassisSpeeds.vyMetersPerSecond), currentChassisSpeeds.omegaRadiansPerSecond);
 
         double xError =        Math.abs(desiredPosX - currentPosX);
         double yError =        Math.abs(desiredPosY - currentPosY);

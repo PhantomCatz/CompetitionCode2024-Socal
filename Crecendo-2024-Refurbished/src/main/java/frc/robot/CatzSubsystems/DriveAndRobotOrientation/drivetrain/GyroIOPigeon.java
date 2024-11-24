@@ -31,7 +31,7 @@ public class GyroIOPigeon implements GyroIO {
   @Override
   public void updateInputs(GyroIOInputs inputs) {
     inputs.gyroConnected = BaseStatusSignal.refreshAll(yaw, yawVelocity).isOK();
-    inputs.gyroYawDegrees = yaw.getValueAsDouble();
-    inputs.gyroYawVel = Units.degreesToRadians(yawVelocity.getValueAsDouble());
+    inputs.gyroAngle = -yaw.getValueAsDouble();
+    inputs.gyroYawVel = -Units.degreesToRadians(yawVelocity.getValueAsDouble());
   }
 }

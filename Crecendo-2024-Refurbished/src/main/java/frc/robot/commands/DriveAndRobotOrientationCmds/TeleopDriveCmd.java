@@ -82,7 +82,7 @@ public class TeleopDriveCmd extends Command {
                         .fromFieldRelativeSpeeds(m_headingAndVelocity_X, 
                                                   m_headingAndVelocity_Y, 
                                                   turningVelocity, 
-                                                  CatzRobotTracker.getInstance().getRobotRotation()
+                                                  CatzRobotTracker.getInstance().getEstimatedPose().getRotation()
                         );
 
 

@@ -43,6 +43,7 @@ import frc.robot.Commands.ControllerModeAbstraction;
 import frc.robot.Utilities.Alert;
 import frc.robot.Utilities.AllianceFlipUtil;
 import frc.robot.Utilities.Alert.AlertType;
+import lombok.Getter;
 
 public class Robot extends LoggedRobot {
   //-------------------------------------------------------------------------------------------------------------
@@ -70,6 +71,7 @@ public class Robot extends LoggedRobot {
   private double autoStart;
   private boolean autoMessagePrinted;
   private static double teleElapsedTime = 0.0;
+  @Getter private static double autoElapsedTime = 0.0;
   // Can Error Detection variables
   private static final double canErrorTimeThreshold = 0.5; // Seconds to disable alert
   private static final double canivoreErrorTimeThreshold = 0.5;
@@ -144,9 +146,9 @@ public class Robot extends LoggedRobot {
     // Set up data receivers & replay source
     switch (CatzConstants.hardwareMode) {
         case REAL:
-            // Running on a real robot, log to a USB stick ("/U/logs")
-            Logger.addDataReceiver(new WPILOGWriter());
-            //Logger.addDataReceiver(new WPILOGWriter("E:/Logs"));
+            // // Running on a real robot, log to a USB stick ("/U/logs")
+            //Logger.addDataReceiver(new WPILOGWriter());
+            // //Logger.addDataReceiver(new WPILOGWriter("E:/Logs"));
             Logger.addDataReceiver(new NT4Publisher());
             break;
 
@@ -230,10 +232,12 @@ public class Robot extends LoggedRobot {
         System.exit(0);
       }
 
-      // if(CatzConstants.getRobotType() != RobotID.SN_TEST) {
-      //   System.out.println("Wrong Robot ID selection, Check CatzConstants robotID"); //TODO fix cases for replay
-      //   System.exit(0);
-      // }
+      if(CatzConstants.getRobotType() != RobotID.SN_TEST) {
+        if(CatzConstants.hardwareMode == RobotHardwareMode.SIM) {
+          System.out.println("Wrong Robot ID selection, Check CatzConstants robotID"); 
+          System.exit(0);
+        }
+      }
     }
 
     DriverStation.silenceJoystickConnectionWarning(true);
@@ -333,11 +337,8 @@ public class Robot extends LoggedRobot {
         }
       }
     }
-<<<<<<< HEAD
     m_robotContainer.getCatzAutonomous().updateQuestionaire();
-=======
     CatzRobotTracker.getInstance().getAutoAimSpeakerParemeters();
->>>>>>> f6bd68dc54f94c6bdbccd0e072649f541afb119a
   }
   
   @Override
@@ -373,7 +374,7 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void autonomousPeriodic() {
-    isResetPositionUsedInAuto = true;
+    autoElapsedTime = Timer.getFPGATimestamp() - autoStart;
   }
 
   @Override

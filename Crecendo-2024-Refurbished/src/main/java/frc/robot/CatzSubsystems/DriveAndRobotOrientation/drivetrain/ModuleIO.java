@@ -23,6 +23,7 @@ public interface ModuleIO {
    public double steerAbsoluteInitPosition;
    public Rotation2d steerPosition = new Rotation2d();
    public double steerVelocityRadsPerSec;
+   public Rotation2d steerAbsoluteEncPosition = new Rotation2d();
    public Rotation2d steerAbsolutePosition = new Rotation2d();
    public double steerTorqueCurrentAmps;
    public double steerBusVoltage;

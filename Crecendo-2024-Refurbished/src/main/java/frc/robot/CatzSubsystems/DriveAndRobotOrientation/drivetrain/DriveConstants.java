@@ -30,15 +30,15 @@ public class DriveConstants {
     switch (CatzConstants.getRobotType()) {
       case SN_TEST, SN2 ->
           DriveConfig.builder()
-              .wheelRadius(Units.inchesToMeters(2))
+              .wheelRadius(Units.inchesToMeters(1.8))
               .robotLengthX(Units.inchesToMeters(24.0))
               .robotWidthY(Units.inchesToMeters(23.5))
               .bumperWidthX(Units.inchesToMeters(37))
               .bumperWidthY(Units.inchesToMeters(33))
               .maxLinearVelocity(Units.feetToMeters(17))
               .maxLinearAcceleration(Units.feetToMeters(75.0)) 
-              .maxAngularVelocity(Units.degreesToRadians(720)) // Radians
-              .maxAngularAcceleration(Units.degreesToRadians(1000)) // Radians // TODO verify angle constraints
+              .maxAngularVelocity(Units.degreesToRadians(600)) // Radians
+              .maxAngularAcceleration(Units.degreesToRadians(600)) // Radians // TODO verify angle constraints
               .build();
       case SN1 ->
           new DriveConfig(
@@ -60,10 +60,10 @@ public class DriveConstants {
                     5.0,
                     0.0,
                     1.0 / DCMotor.getKrakenX60Foc(1).KtNMPerAmp, // A/(N*m)
-                    35.0,
+                    0.2,
                     0.0,
-                    4000.0,
-                    50.0, 
+                    0.7,
+                    0.005, 
                     Mk4iReductions.L2_PLUS.reduction,
                     Mk4iReductions.steer.reduction);
             case SN2 ->
@@ -71,10 +71,10 @@ public class DriveConstants {
                     5.5,
                     0.6,
                     0.0,
-                    1.2,
+                    1.2,//1.2, //TODO fix to account for non foc
                     0.0,
-                    0.3,
-                    0.0,
+                    0.7,
+                    0.005,
                     Mk4iReductions.L2_PLUS.reduction,
                     Mk4iReductions.steer.reduction);
             case SN_TEST ->
@@ -109,17 +109,17 @@ public class DriveConstants {
         switch (CatzConstants.getRobotType()) {
             case SN2 ->
                 new ModuleConfig[] {
-                    new ModuleConfig(1, 2, 9, 0.228031255+0.5),
-                    new ModuleConfig(3, 4, 8, 0.733477518+0.5),
-                    new ModuleConfig(5, 6, 7, 1.1043222),
-                    new ModuleConfig(7, 8, 6, 0.3417887)
+                    new ModuleConfig(1, 2, 9, 1.4196464857/Math.PI/2+0.5),
+                    new ModuleConfig(3, 4, 8, 4.6208462275/Math.PI/2+0.5),
+                    new ModuleConfig(5, 6, 7, 0.6691969510/Math.PI/2),
+                    new ModuleConfig(7, 8, 6, 2.0568857418/Math.PI/2)
                 };
             case SN1 ->
                 new ModuleConfig[] {
-                    new ModuleConfig(1, 2, 9, 1.2307227057),
-                    new ModuleConfig(3, 4, 8, 0.24567763114+0.5),
-                    new ModuleConfig(5, 6, 7, -0.1892973047),
-                    new ModuleConfig(7, 8, 6, 0.010002000)
+                    new ModuleConfig(1, 2, 9, 0.2134),
+                    new ModuleConfig(3, 4, 8, 0.7446),
+                    new ModuleConfig(5, 6, 7, 0.7983),
+                    new ModuleConfig(7, 8, 6, 0.0070)
                 };
             case SN_TEST -> 
                 new ModuleConfig[] {
@@ -137,7 +137,7 @@ public class DriveConstants {
     //
     //-----------------------------------------------------------------------------------------------------------------------------
     public static final PathConstraints autoPathfindingConstraints = new PathConstraints( // 540 // 720 
-                                                                    1.0, driveConfig.maxLinearAcceleration, 
+                                                                    2.0, driveConfig.maxLinearAcceleration, //max vel causing messup
                                                                     driveConfig.maxAngularVelocity, driveConfig.maxAngularAcceleration);
 
 
@@ -158,7 +158,7 @@ public class DriveConstants {
             new PIDController(10.0, 0.0, 0.1), 
             new PIDController(10.0, 0.0, 0.1),
             new ProfiledPIDController(
-                10, 0, 0,
+                4, 0, 0,
                 new TrapezoidProfile.Constraints(driveConfig.maxAngularVelocity, driveConfig.maxAngularAcceleration)
             )
         );

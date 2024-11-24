@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 1.3842846515935527,
-        "y": 5.574358195791997
+        "x": 4.0,
+        "y": 1.4170112220395616
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.384284651593553,
-        "y": 5.574358195791997
+        "x": 4.999999999999999,
+        "y": 1.4170112220395616
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 2.4851032868970147,
-        "y": 5.574358195791997
+        "x": 7.930642280685416,
+        "y": 2.4007214918852084
       },
       "prevControl": {
-        "x": 1.4851032868970147,
-        "y": 5.574358195791997
+        "x": 6.930642280685416,
+        "y": 2.4007214918852084
       },
       "nextControl": null,
       "isLocked": false,
@@ -43,7 +43,7 @@
     "rotateFast": false
   },
   "reversed": false,
-  "folder": null,
+  "folder": "Far Side Auton",
   "previewStartingState": {
     "rotation": 0,
     "velocity": 0

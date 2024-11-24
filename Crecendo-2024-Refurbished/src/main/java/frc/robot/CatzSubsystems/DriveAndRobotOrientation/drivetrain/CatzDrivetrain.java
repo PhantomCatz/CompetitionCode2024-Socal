@@ -77,7 +77,7 @@ public class CatzDrivetrain extends SubsystemBase {
         // Gyro Instantiation
         switch (CatzConstants.hardwareMode) {
             case REAL:
-                gyroIO = new GyroIONavX();
+                gyroIO = new GyroIOPigeon();
                 break;
             case REPLAY:
                 gyroIO = new GyroIONavX() {};
@@ -161,20 +161,18 @@ public class CatzDrivetrain extends SubsystemBase {
         CatzRobotTracker.getInstance()
                             .addOdometryObservation(
                                 new OdometryObservation(
-                                    Timer.getFPGATimestamp(), 
-                                    wheelPositions, 
-                                    gyroAngle2d, 
-                                    getModuleStates(), 
-                                    gyroInputs.gyroAngleVel, 
-                                    gyroInputs.gyroAccelX, 
-                                    gyroInputs.gyroAccelY)
+                                wheelPositions,
+                                getModuleStates(),
+                                gyroAngle2d,
+                                Timer.getFPGATimestamp()    
+                                )
                             );
 
         // Update current velocities use gyro when possible
         Twist2d robotRelativeVelocity = getTwist2dSpeeds();
         robotRelativeVelocity.dtheta =
             gyroInputs.gyroConnected
-                ? Math.toRadians(gyroInputs.gyroAngleVel)
+                ? Math.toRadians(gyroInputs.gyroYawVel)
                 : robotRelativeVelocity.dtheta;
         CatzRobotTracker.getInstance().addVelocityData(robotRelativeVelocity);
 
@@ -190,18 +188,21 @@ public class CatzDrivetrain extends SubsystemBase {
     //          Driving methods
     //
     //--------------------------------------------------------------------------------------------------------------------------
-    /** chassis speeds input w/ or w/o any correction for drift */
-    public void drive(ChassisSpeeds chassisSpeeds, boolean isDiscretizeEnabled) {
-        if(isDiscretizeEnabled) {
-            chassisSpeeds = ChassisSpeeds.discretize(chassisSpeeds, 0.02);
-        }
+    public void drive(ChassisSpeeds chassisSpeeds) {
+        chassisSpeeds = ChassisSpeeds.discretize(chassisSpeeds, 0.02);
+        //--------------------------------------------------------
         // Convert chassis speeds to individual module states and set module states
+        //--------------------------------------------------------
         SwerveModuleState[] moduleStates = DriveConstants.swerveDriveKinematics.toSwerveModuleStates(chassisSpeeds);
 
+        //--------------------------------------------------------
         // Scale down wheel speeds
+        //--------------------------------------------------------
         SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, DriveConstants.driveConfig.maxLinearVelocity());
         
-        // Optimize wheel angles
+        //--------------------------------------------------------
+        // Optimize Wheel Angles
+        //--------------------------------------------------------
         SwerveModuleState[] optimizedDesiredStates = new SwerveModuleState[4];
         for (int i = 0; i < 4; i++) {  
             // The module returns the optimized state, useful for logging
@@ -213,7 +214,6 @@ public class CatzDrivetrain extends SubsystemBase {
 
         Logger.recordOutput("Drive/chassispeeds", chassisSpeeds);
         Logger.recordOutput("Drive/modulestates", optimizedDesiredStates);
-
     }
 
     /**  Create a command to stop driving */
@@ -236,7 +236,7 @@ public class CatzDrivetrain extends SubsystemBase {
 
     /** Runs forwards at the commanded voltage or amps. */
     public void runCharacterization(double input) {
-        drive(new ChassisSpeeds(0.0, 0.0, input), false);
+        drive(new ChassisSpeeds(0.0, 0.0, input));
     }
 
     //-----------------------------------------------------------------------------------------------------------

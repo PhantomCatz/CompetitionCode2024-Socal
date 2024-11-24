@@ -16,7 +16,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.CatzConstants;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain.ModuleIOInputsAutoLogged;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain.ModuleIORealFoc;
-import frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain.DriveConstants.ModuleConfig;
 import frc.robot.Utilities.Alert;
 import frc.robot.Utilities.CatzMathUtils;
 import frc.robot.Utilities.CatzMathUtils.Conversions;
@@ -73,6 +72,8 @@ public class CatzSwerveModule {
         steerMotorDisconnected = new Alert(m_moduleName + " steer motor disconnected!", Alert.AlertType.WARNING);
 
         resetDriveEncs();
+
+
     } // -End of CatzSwerveModule Constructor
 
     public void periodic() {
@@ -94,17 +95,21 @@ public class CatzSwerveModule {
         debugLogsSwerve();
     } // -End of CatzSwerveModule Periodic 
 
+
     public void debugLogsSwerve(){
         Logger.recordOutput("Module " + m_moduleName + "/drive recorded fps", Units.metersToFeet(Conversions.RPSToMPS(inputs.driveVelocityRPS)));
         Logger.recordOutput("Module " + m_moduleName + "/drive target fps", Units.metersToFeet(m_swerveModuleState.speedMetersPerSecond));
         Logger.recordOutput("Module " + m_moduleName + "/current state", getModuleState());
         Logger.recordOutput("Module " + m_moduleName + "/angle error deg", Math.toDegrees(m_swerveModuleState.angle.getRadians()-getAbsEncRadians()));
         Logger.recordOutput("Module " + m_moduleName + "/currentmoduleangle rad", getAbsEncRadians());
-        Logger.recordOutput("Module " + m_moduleName + "/targetmoduleangle rad", m_swerveModuleState.angle.getRadians());
+        //Logger.recordOutput("Module " + m_moduleName + "/targetmoduleangle rad", m_swerveModuleState.angle.getRadians());
 
 
-        SmartDashboard.putNumber("absenctorad" + m_moduleName , getAbsEncRadians());
+        //SmartDashboard.putNumber("absencposrad" + m_moduleName, inputs.steerAbsoluteEncPosition.getRadians());
+        SmartDashboard.putNumber("rawEncoderRevs" + m_moduleName, getRawEnc());
         SmartDashboard.putNumber("angle" + m_moduleName , getCurrentRotation().getDegrees());
+
+
     }
 
     /**
@@ -112,19 +117,26 @@ public class CatzSwerveModule {
      *
      * @param state Desired state with speed and angle.
      */
-    public void setModuleAngleAndVelocity(SwerveModuleState state) { //TODO log variables actually used in calculations
-
+    public void setModuleAngleAndVelocity(SwerveModuleState state) {
+        //--------------------------------------------------------
+        //colllect variabels used in calculations
+        //--------------------------------------------------------
         this.m_swerveModuleState        = state;
         double targetAngleRads          = state.angle.getRadians();
         double currentAngleRads         = getAbsEncRadians();
 
         Logger.recordOutput("Module/TargetMPS", state.speedMetersPerSecond);
+        
+        //--------------------------------------------------------
         // Run closed loop drive control
+        //--------------------------------------------------------
         io.runDriveVelocityRPSIO(
             Conversions.MPSToRPS(state.speedMetersPerSecond)
         );
-        // Run Closed Loop Steer Control
 
+        //--------------------------------------------------------
+        // Run closed loop steer control
+        //--------------------------------------------------------
         io.runSteerPositionSetpoint(currentAngleRads, targetAngleRads);
     }
 
@@ -209,6 +221,10 @@ public class CatzSwerveModule {
 
     public double getDrvVelocityRPS() {
         return inputs.driveVelocityRPS;
+    }
+
+    public double getRawEnc(){
+        return inputs.steerAbsoluteEncPosition.getRotations();
     }
 
     /** Outputs the Rotation object of the module */

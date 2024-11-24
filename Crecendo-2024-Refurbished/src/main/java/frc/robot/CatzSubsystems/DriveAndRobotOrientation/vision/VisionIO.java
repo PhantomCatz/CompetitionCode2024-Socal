@@ -2,7 +2,10 @@ package frc.robot.CatzSubsystems.DriveAndRobotOrientation.vision;
 
 import org.littletonrobotics.junction.AutoLog;
 
+import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 
 public interface VisionIO {
     
@@ -14,22 +17,31 @@ public interface VisionIO {
         public double timestamp;
         public boolean isNewVisionPose; // is it a new pose from a new apriltag estimate
 
-        public double maxAmbiguity;
-        public double maxDistance;
-        public double minDistance;
-
-        public boolean hasTarget = false;
+        public int id;                 // Tag ID
+        public double txnc;         // X offset (no crosshair)
+        public double tync;         // Y offset (no crosshair)
+        public double ta_Fiducial;   // Target area
+        public double distToCamera;  // Distance to camera
+        public double distToRobot;    // Distance to robot
+        public double ambiguity;   // Tag pose ambiguity
 
         public double primaryApriltagID; //closest apirltag id that the limelight is communicating with
 
         public double ty; //vertical offset from crosshair to target in degrees
         public double tx; //horizontal offset from crosshair to target
-        public double tv; //whether the limelight has any vaild targets
+        public boolean hasTarget; //whether the limelight has any vaild targets
         public double ta; //target area of the limelight from 0%-100%...how much does the apirltage take up on the frame
 
         public int tagCount;
-        public double latency;
+        public double totalLatency;
 
+        public boolean isMegaTag2;
+
+
+        // Nerual detector inputs
+        public int classID;
+        public double corner0X;
+        public double corner0Y;
     }
 
     public default void updateInputs(VisionIOInputs inputs) {}

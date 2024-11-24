@@ -3,14 +3,13 @@
   "robotLength": 0.9,
   "holonomicMode": true,
   "pathFolders": [
-    "New Folder",
-    "New New Folder",
-    "DriveStraight Score"
+    "Far Side Auton",
+    "SpeakerSide paths"
   ],
   "autoFolders": [],
   "defaultMaxVel": 3.0,
   "defaultMaxAccel": 3.0,
-  "defaultMaxAngVel": 540.0,
-  "defaultMaxAngAccel": 720.0,
+  "defaultMaxAngVel": 40.0,
+  "defaultMaxAngAccel": 20.0,
   "maxModuleSpeed": 4.5
 }
