@@ -44,7 +44,6 @@ public class VisionIONeuralNetwork implements VisionIO {
 
         }
         else {
-
         }
 
 

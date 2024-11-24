@@ -18,6 +18,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.EventMarker;
 import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.PathPlannerTrajectory;
@@ -27,12 +28,15 @@ import com.pathplanner.lib.util.ReplanningConfig;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.RobotContainer;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.CatzRobotTracker;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain.DriveConstants;
@@ -67,13 +71,13 @@ public class CatzAutonomous {
 
         this.m_container = container;
 
+        // Path follwing setup
         CatzRobotTracker tracker = CatzRobotTracker.getInstance();
         HolonomicPathFollowerConfig config = new HolonomicPathFollowerConfig(
             DriveConstants.driveConfig.maxLinearVelocity() / 2, 
             DriveConstants.driveConfig.driveBaseRadius(),   
             new ReplanningConfig()
         );
-        
         BooleanSupplier shouldFlip = ()->AllianceFlipUtil.shouldFlipToRed();
         AutoBuilder.configureHolonomic(
             tracker::getEstimatedPose,
@@ -101,15 +105,19 @@ public class CatzAutonomous {
             //to get rid of the extensions trailing the path names
             String pathName = pathFile.getName().replaceFirst("[.][^.]+$", ""); 
             PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
-            NamedCommands.registerCommand(pathName, new TrajectoryDriveCmd(path, container.getCatzDrivetrain()));
+            List<EventMarker> eventMarkers = path.getEventMarkers();
+            NamedCommands.registerCommand(pathName, new ParallelCommandGroup(
+                                                            new TrajectoryDriveCmd(path, container.getCatzDrivetrain()),
+                                                            new EventMarkerHelperCmd(eventMarkers, path.getAllPathPoints())
+                                                    ));
         }
         //----------------------------------------------------------------------------------------
         //  Named Command registration
         //----------------------------------------------------------------------------------------
         NamedCommands.registerCommand("TestPrint", new PrintCommand("Benchmark"));
         NamedCommands.registerCommand("ReturnToScore", autoFindPathSpeaker());
-
-
+        NamedCommands.registerCommand("Intake", AutomatedSequenceCmds.noteDetectIntakeToShooter(container));
+    
         //---------------------------------------------------------------------------
         // Far side auto Path Configuration
         //---------------------------------------------------------------------------
@@ -144,6 +152,12 @@ public class CatzAutonomous {
         moveOptions.put("Move", NamedCommands.getCommand("DriveStraight"));
         dashboardCmds.put("SpinOrMove", new DashboardCmd("Spin or Move?", moveOptions));
 
+        //---------------------------------------
+        HashMap<String, Command> pathOptions = new HashMap<>();
+        pathOptions.put("CurveTurn", NamedCommands.getCommand("CurveTurn"));
+        pathOptions.put("DriveStraight", NamedCommands.getCommand("DriveStraight"));
+        dashboardCmds.put("CurveOrStraight", new DashboardCmd("Curve or Turn?", pathOptions));
+
         dashboardCmds.forEach((k, v) -> {
             NamedCommands.registerCommand(k, v);
         });
@@ -158,7 +172,7 @@ public class CatzAutonomous {
     public void updateQuestionaire(){
         try {
             String autoName = autoPathChooser.get().getName() + ".auto";
-            JSONObject json = (JSONObject) parser.parse(new FileReader(Filesystem.getDeployDirectory()+"/pathplanner/autos/"+autoName));
+            JSONObject json = (JSONObject) parser.parse(new FileReader(Filesystem.getDeployDirectory()+"/pathplanner/autos/" + autoName));
 
             if (!autoName.equals(lastAutoName)){
                 lastAutoName = autoName;
@@ -204,29 +218,19 @@ public class CatzAutonomous {
 
     //Automatic pathfinding command
     public Command autoFindPathAmp() {
-        List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
-                new Pose2d(1.89, 6.29, Rotation2d.fromDegrees(90)),
-                new Pose2d(1.89, 7.76, Rotation2d.fromDegrees(90))
-                    );
+        return Commands.either(
+            AutoBuilder.pathfindToPoseFlipped(new Pose2d(1.89, 7.76, Rotation2d.fromDegrees(90)), DriveConstants.autoPathfindingConstraints), 
+            AutoBuilder.pathfindToPose(new Pose2d(1.89, 7.76, Rotation2d.fromDegrees(90)), DriveConstants.autoPathfindingConstraints), 
+            ()->AllianceFlipUtil.shouldFlipToRed());
 
-        //send path info to trajectory following command
-        return new TrajectoryDriveCmd(bezierPoints, 
-                                      DriveConstants.autoPathfindingConstraints, 
-                                      new GoalEndState(0.0, Rotation2d.fromDegrees(90)), m_container.getCatzDrivetrain(), 2);
     }
 
     public Command autoFindPathSpeaker() {
-        List<Translation2d> bezierPoints = PathPlannerPath.bezierFromPoses(
-                new Pose2d(4.36, 6.14, Rotation2d.fromDegrees(180)),
-                new Pose2d(2.74, 6.14, Rotation2d.fromDegrees(180))
-                    );
-
-        //send path info to trajectory following command
-        return new TrajectoryDriveCmd(bezierPoints, 
-                                      DriveConstants.autoPathfindingConstraints, 
-                                      new GoalEndState(0.0, Rotation2d.fromDegrees(200)), m_container.getCatzDrivetrain(), 2);
+        return Commands.either(
+            AutoBuilder.pathfindToPoseFlipped(new Pose2d(2.74, 6.14, Rotation2d.fromDegrees(180)), DriveConstants.autoPathfindingConstraints), 
+            AutoBuilder.pathfindToPose(new Pose2d(2.74, 6.14, Rotation2d.fromDegrees(180)), DriveConstants.autoPathfindingConstraints), 
+            ()->AllianceFlipUtil.shouldFlipToRed());
     }
-
     //---------------------------------------------------------------------------------------------------------
     //
     //          Trajectory Helpers
@@ -243,7 +247,6 @@ public class CatzAutonomous {
                 CatzRobotTracker.getInstance().getEstimatedPose().getRotation());
         }
     }
-
     /** Getter for final autonomous routine */
     public Command getCommand() { 
         return autoPathChooser.get();

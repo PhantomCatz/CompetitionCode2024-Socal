@@ -41,6 +41,7 @@ public class TrajectoryDriveCmd extends Command {
     private CatzDrivetrain m_driveTrain;
     private PathPlannerTrajectory trajectory;
     private HolonomicDriveController hocontroller;
+    private CatzRobotTracker tracker = CatzRobotTracker.getInstance();
     
     private final Timer timer = new Timer();
     private final double TIMEOUT_SCALAR = 5;
@@ -50,20 +51,8 @@ public class TrajectoryDriveCmd extends Command {
     public static double pathTimeOut = -999.0;
 
 
-    //Command inside trajectory helper variables
-    private List<Double> waypointsRatios = Arrays.asList();
-    private List<Command> m_commands     = Arrays.asList();
-    private int numConsecutiveWaypointCounter = 0;
-    private double scaledWaypointTime = 0.0;
-    private Command cmd = new InstantCommand();
-
-
-    private boolean executing = false;
-    private boolean done = false;
-
     //Constructor Logger
     private int m_constructorLogger = 1; // For determining if the command is auto path find or autonomous
-
 
     /**
      * @param drivetrain           The coordinator between the gyro and the swerve modules.
@@ -92,10 +81,7 @@ public class TrajectoryDriveCmd extends Command {
     @Override
     public void initialize() {
         timer.reset();
-        timer.start();
-
-        //it is necessary to make a new instance of holonomic controller to clear the memory so kD doesn't explode in the first frame due to discontinuous function
-        hocontroller = DriveConstants.getNewHolController();
+        timer.start();        
         
         PathPlannerPath usePath = path;
         if(AllianceFlipUtil.shouldFlipToRed()) {
@@ -106,16 +92,19 @@ public class TrajectoryDriveCmd extends Command {
             usePath, 
             DriveConstants.
                 swerveDriveKinematics.
-                    toChassisSpeeds(CatzRobotTracker.getInstance().getCurrentModuleStates()),
-            CatzRobotTracker.getInstance().getEstimatedPose().getRotation()
+                    toChassisSpeeds(tracker.getCurrentModuleStates()),
+            tracker.getEstimatedPose().getRotation()
         );
-                                               
+
+        tracker.resetPose(usePath.getPreviewStartingHolonomicPose());
+        hocontroller = DriveConstants.getNewHolController();                                
         pathTimeOut = trajectory.getTotalTimeSeconds() * TIMEOUT_SCALAR; //TODO do we still need this
     }
 
     @Override
     public void execute() {
         double currentTime = this.timer.get();
+        tracker.setTrajectoryAmtCompleted(currentTime/trajectory.getTotalTimeSeconds());
 
         // Trajectory Executor
         if(!atTarget){
@@ -123,7 +112,7 @@ public class TrajectoryDriveCmd extends Command {
             // Getters from pathplanner and current robot pose
             PathPlannerTrajectory.State goal = trajectory.sample(Math.min(currentTime, trajectory.getTotalTimeSeconds()));
             Rotation2d targetOrientation     = goal.targetHolonomicRotation;
-            Pose2d currentPose               = CatzRobotTracker.getInstance().getEstimatedPose();
+            Pose2d currentPose               = tracker.getEstimatedPose();
                 
             /* 
             * Convert PP trajectory into a wpilib trajectory type 
@@ -138,10 +127,10 @@ public class TrajectoryDriveCmd extends Command {
     
             //construct chassisspeeds
             ChassisSpeeds adjustedSpeeds = hocontroller.calculate(currentPose, state, targetOrientation);
-            // System.out.println(adjustedSpeeds.vxMetersPerSecond);
             //send to drivetrain
+
             m_driveTrain.drive(adjustedSpeeds);
-            CatzRobotTracker.getInstance().addTrajectorySetpointData(goal.getTargetHolonomicPose());
+            tracker.addTrajectorySetpointData(goal.getTargetHolonomicPose());
 
             Logger.recordOutput("CatzRobotTracker/Desired Auto Pose", new Pose2d(state.poseMeters.getTranslation(), goal.targetHolonomicRotation));
 
@@ -149,36 +138,6 @@ public class TrajectoryDriveCmd extends Command {
         }else{
             m_driveTrain.stopDriving();
         }
-
-
-        // Command Executer
-        if(!waypointsRatios.isEmpty()) {
-            if(numConsecutiveWaypointCounter < waypointsRatios.size()) {
-                scaledWaypointTime = waypointsRatios.get(numConsecutiveWaypointCounter);  
-                cmd = m_commands.get(numConsecutiveWaypointCounter);   
-                if(executing == false) {
-                    if(currentTime > scaledWaypointTime){
-                        executing = true;
-                        cmd.initialize();
-                        System.out.println(scaledWaypointTime);
-
-                    }
-                }
-            
-
-                if(executing) {
-                    m_commands.get(numConsecutiveWaypointCounter).execute();
-                    if(cmd.isFinished() || (currentTime >= scaledWaypointTime + 2.0)){
-                        done = true;
-                        cmd.end(true);
-                        executing = false;
-                        numConsecutiveWaypointCounter++;
-                    }
-                }
-            }
-        }
-
-
 
     }
 
@@ -207,7 +166,6 @@ public class TrajectoryDriveCmd extends Command {
     public boolean isFinished() {
         // Finish command if the total time the path takes is over
         State endState = trajectory.getEndState();
-        CatzRobotTracker tracker = CatzRobotTracker.getInstance();
 
         double currentPosX =        tracker.getEstimatedPose().getX();
         double currentPosY =        tracker.getEstimatedPose().getY();
@@ -220,7 +178,7 @@ public class TrajectoryDriveCmd extends Command {
         //Another condition to end trajectory. If end target velocity is zero, then only stop if the robot velocity is also near zero so it doesn't run over its target.
         double desiredMPS = trajectory.getEndState().velocityMps;
         ChassisSpeeds currentChassisSpeeds = tracker.getRobotChassisSpeeds();
-        double currentMPS = Math.hypot(currentChassisSpeeds.vxMetersPerSecond, currentChassisSpeeds.vyMetersPerSecond);
+        double currentMPS = Math.hypot(Math.hypot(currentChassisSpeeds.vxMetersPerSecond, currentChassisSpeeds.vyMetersPerSecond), currentChassisSpeeds.omegaRadiansPerSecond);
 
         double xError =        Math.abs(desiredPosX - currentPosX);
         double yError =        Math.abs(desiredPosY - currentPosY);

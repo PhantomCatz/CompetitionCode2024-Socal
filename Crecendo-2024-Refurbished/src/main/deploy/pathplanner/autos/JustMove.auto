@@ -1,0 +1,43 @@
+{
+  "version": 1.0,
+  "startingPose": {
+    "position": {
+      "x": 1.3842846515935527,
+      "y": 5.574358195791997
+    },
+    "rotation": 0
+  },
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "Choreo"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Test"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Score1"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Score2"
+          }
+        }
+      ]
+    }
+  },
+  "folder": null,
+  "choreoAuto": false
+}

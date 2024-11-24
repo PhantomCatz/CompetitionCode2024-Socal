@@ -14,7 +14,45 @@
         {
           "type": "named",
           "data": {
-            "name": "TurnStraight"
+            "name": "Choreo"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Score1"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Score2"
+                }
+              },
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Score3"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Score4"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
           }
         }
       ]
