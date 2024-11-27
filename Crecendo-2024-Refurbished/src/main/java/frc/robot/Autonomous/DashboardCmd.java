@@ -11,6 +11,7 @@ public class DashboardCmd extends Command{
 
     private boolean isCommandSkipped = false;
 
+
     public DashboardCmd(String question, HashMap<String, Command> options){
         options.forEach((k,v) -> {
             chooser.addOption(k,v);
@@ -40,7 +41,26 @@ public class DashboardCmd extends Command{
     }
 
     @Override
+    public void execute() {
+        if(!isCommandSkipped) {
+            if(chooser.getSelected().isFinished()) {
+                chooser.getSelected().cancel();
+                cancel();
+            }
+        }
+    }
+
+    @Override
+    public void end(boolean interrupted) {
+        if(!isCommandSkipped) {
+            System.out.println("cancel");
+            chooser.getSelected().cancel();
+            chooser.getSelected().end(interrupted);
+        }
+    }
+
+    @Override
     public boolean isFinished() {
-        return isCommandSkipped || chooser.getSelected().isFinished(); // boolean is evaluated first to prevent crashing
+        return isCommandSkipped; // boolean is evaluated first to prevent crashing
     }
 }

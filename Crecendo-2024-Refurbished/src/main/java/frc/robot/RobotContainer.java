@@ -90,8 +90,6 @@ public class RobotContainer {
 
   public RobotContainer() {
 
-    NamedCommands.registerCommand("PrintCMD", Commands.print("HI")); // TODO these comands are broken
-
     // Drive And Aux Command Mapping
     configureBindings();
 

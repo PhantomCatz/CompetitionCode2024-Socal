@@ -3,25 +3,105 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 1.2630356689284812,
+        "x": 1.4389491636126137,
         "y": 7.0
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.2630356689284845,
-        "y": 7.0
+        "x": 2.274538263366347,
+        "y": 6.992561413700705
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 2.8609165789760156,
+        "x": 2.7143220000766783,
         "y": 7.0
       },
       "prevControl": {
-        "x": 1.8609165789760156,
-        "y": 7.0
+        "x": 2.1132902191281753,
+        "y": 6.977739563668574
+      },
+      "nextControl": {
+        "x": 3.505932726155274,
+        "y": 7.029318915780689
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 8.167640335280671,
+        "y": 7.461664066185276
+      },
+      "prevControl": {
+        "x": 7.715550026434647,
+        "y": 7.491803420108344
+      },
+      "nextControl": {
+        "x": 8.607424071991014,
+        "y": 7.432345150404587
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 2.8462571210897774,
+        "y": 6.552777676990374
+      },
+      "prevControl": {
+        "x": 3.2405163694297037,
+        "y": 6.625674121890406
+      },
+      "nextControl": {
+        "x": 2.451997872749852,
+        "y": 6.479881232090341
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 8.167640335280671,
+        "y": 5.746507493014986
+      },
+      "prevControl": {
+        "x": 8.881420299439243,
+        "y": 6.010870442703347
+      },
+      "nextControl": {
+        "x": 7.376029609202077,
+        "y": 5.453318335208099
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 6.320548641097282,
+        "y": 6.039696650821874
+      },
+      "prevControl": {
+        "x": 7.11247446862264,
+        "y": 5.818996010363986
+      },
+      "nextControl": {
+        "x": 5.426321709786277,
+        "y": 6.2889074349577285
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 2.7143220000766783,
+        "y": 6.230269603402798
+      },
+      "prevControl": {
+        "x": 4.282883994343525,
+        "y": 6.215610145512454
       },
       "nextControl": null,
       "isLocked": false,
@@ -29,15 +109,113 @@
     }
   ],
   "rotationTargets": [],
-  "constraintZones": [],
+  "constraintZones": [
+    {
+      "name": "Pickup1Constraint",
+      "minWaypointRelativePos": 0.5499999999999999,
+      "maxWaypointRelativePos": 1.2000000000000002,
+      "constraints": {
+        "maxVelocity": 1.0,
+        "maxAcceleration": 3.0,
+        "maxAngularVelocity": 40.0,
+        "maxAngularAcceleration": 20.0
+      }
+    }
+  ],
   "eventMarkers": [
     {
-      "name": "New Event Marker",
-      "waypointRelativePos": 0.65,
+      "name": "Pickup1Score2",
+      "waypointRelativePos": 0.75,
       "command": {
         "type": "sequential",
         "data": {
           "commands": [
+            {
+              "type": "named",
+              "data": {
+                "name": "noteDetectIntakeToShooter"
+              }
+            },
+            {
+              "type": "named",
+              "data": {
+                "name": "TestPrint"
+              }
+            },
+            {
+              "type": "named",
+              "data": {
+                "name": "autonSpeakerShoot"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Pickup2",
+      "waypointRelativePos": 1.85,
+      "command": {
+        "type": "sequential",
+        "data": {
+          "commands": [
+            {
+              "type": "named",
+              "data": {
+                "name": "noteDetectIntakeToShooter"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Score2",
+      "waypointRelativePos": 2.8499999999999996,
+      "command": {
+        "type": "sequential",
+        "data": {
+          "commands": [
+            {
+              "type": "named",
+              "data": {
+                "name": "autonSpeakerShoot"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Pickup3",
+      "waypointRelativePos": 3.8,
+      "command": {
+        "type": "parallel",
+        "data": {
+          "commands": [
+            {
+              "type": "named",
+              "data": {
+                "name": "noteDetectIntakeToShooter"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Score3",
+      "waypointRelativePos": 5.8999999999999995,
+      "command": {
+        "type": "parallel",
+        "data": {
+          "commands": [
+            {
+              "type": "named",
+              "data": {
+                "name": "autonSpeakerShoot"
+              }
+            },
             {
               "type": "named",
               "data": {
