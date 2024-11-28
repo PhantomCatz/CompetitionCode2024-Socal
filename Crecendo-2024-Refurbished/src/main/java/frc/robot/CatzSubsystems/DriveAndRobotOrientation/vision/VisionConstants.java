@@ -22,7 +22,9 @@ public class VisionConstants {
   public static final double thetaStdDevCoefficient = 0.01;
 
   public static final int LIMELIGHT_PIPLINE_APRILTAG = 0;
-  public static final int LIMELIGHT_PIPLINE_NEURALNETWORK = 1;
+  public static final int LIMELIGHT_PIPLINE_NEURALNETWORK_NOTE = 1;
+  public static final int LIMELIGHT_PIPLINE_NEURALNETWORK_YELLOW = 2;
+
 
   public static final Transform3d UDON_TRANSFORM = new Transform3d(0.0, 
                                                                     0.0, 

@@ -56,9 +56,7 @@ public class VisionIOLimeLight implements VisionIO {
     public void updateInputs(VisionIOInputs inputs) {
         //------------------------------------------------------------------------------------------------------
         //  Limelight Data Collection
-        //------------------------------------------------------------------------------------------------------
-        LimelightHelpers.SetRobotOrientation(name, gyroYaw.get(), 0.0, 0.0, 0.0, 0.0, 0.0);
-        // Get raw AprilTag/Fiducial data
+        //------------------------------------------------------------------------------------------------------        // Get raw AprilTag/Fiducial data
         RawFiducial[] fiducials = LimelightHelpers.getRawFiducials(name);
         for (RawFiducial fiducial : fiducials) {
             inputs.id = fiducial.id;                    // Tag ID
@@ -89,9 +87,9 @@ public class VisionIOLimeLight implements VisionIO {
             
             //take new pose info from the limelight api
             // collects pose information based off network tables and orients itself depending on alliance side
+            LimelightHelpers.SetRobotOrientation(name, gyroYaw.get(), 0.0, 0.0, 0.0, 0.0, 0.0);
             PoseEstimate visionEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(name);
             inputs.isMegaTag2 = visionEstimate.isMegaTag2;
-            
             inputs.tagCount = visionEstimate.tagCount;
             visionPose2d = visionEstimate.pose;
 
