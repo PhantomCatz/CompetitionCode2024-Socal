@@ -10,6 +10,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import frc.robot.Utilities.AllianceFlipUtil;
+import frc.robot.Utilities.GeomUtil;
 
 /**
    * Contains various field dimensions and useful reference points. Dimensions are
@@ -96,6 +98,26 @@ import edu.wpi.first.math.util.Units;
           (bottomLeftSpeaker.getZ() + bottomRightSpeaker.getZ()) / 2.0);
     }
 
+    public static final class Subwoofer {
+      public static final Pose2d ampFaceCorner =
+          new Pose2d(
+              Units.inchesToMeters(35.775),
+              Units.inchesToMeters(239.366),
+              Rotation2d.fromDegrees(-120));
+  
+      public static final Pose2d sourceFaceCorner =
+          new Pose2d(
+              Units.inchesToMeters(35.775),
+              Units.inchesToMeters(197.466),
+              Rotation2d.fromDegrees(120));
+  
+      public static final Pose2d centerFace =
+          new Pose2d(
+              Units.inchesToMeters(35.775),
+              Units.inchesToMeters(218.416),
+              Rotation2d.fromDegrees(0));
+    }
+
     public static final class Stage {
       public static final Pose2d podiumLeg =
           new Pose2d(Units.inchesToMeters(126.75), Units.inchesToMeters(161.638), new Rotation2d());
@@ -144,4 +166,32 @@ import edu.wpi.first.math.util.Units;
         throw new RuntimeException(e);
       }
     }
+
+    public static final Pose2d startingSource =
+        new Pose2d(
+            FieldConstants.startingLineX - 0.5,
+            FieldConstants.Stage.podiumLeg.getY(),
+            AllianceFlipUtil.apply(AllianceFlipUtil.apply(Rotation2d.fromDegrees(0.0))));
+    public static final Pose2d startingCenter =
+        new Pose2d(
+            FieldConstants.startingLineX - 0.5,
+            FieldConstants.StagingLocations.spikeTranslations[1].getY(),
+            AllianceFlipUtil.apply(Rotation2d.fromDegrees(0)));
+    public static final Pose2d startingAmp =
+        new Pose2d(
+            FieldConstants.startingLineX - 0.5,
+            FieldConstants.StagingLocations.spikeTranslations[2].getY(),
+            AllianceFlipUtil.apply(Rotation2d.fromDegrees(0.0)));
+
+  public static final Pose2d startingAmpEdge =
+      new Pose2d(startingLineX - 0.5, Amp.ampBottomY - 0.45, AllianceFlipUtil.apply(Rotation2d.fromDegrees(0.0)));
+  public static final Pose2d startingFarSource =
+      new Pose2d(FieldConstants.startingLineX - 0.5, 1.57, AllianceFlipUtil.apply(Rotation2d.fromDegrees(0)));
+  // Subwoofer starting locations
+  public static final Pose2d startingSourceSubwoofer =
+      FieldConstants.Subwoofer.sourceFaceCorner.transformBy(
+          GeomUtil.toTransform2d(-Units.inchesToMeters(17.0), Units.inchesToMeters(17.0)));
+  public static final Pose2d startingAmpSubwoofer =
+      FieldConstants.Subwoofer.ampFaceCorner.transformBy(
+          GeomUtil.toTransform2d(-Units.inchesToMeters(17.0), -Units.inchesToMeters(17.0)));
   }

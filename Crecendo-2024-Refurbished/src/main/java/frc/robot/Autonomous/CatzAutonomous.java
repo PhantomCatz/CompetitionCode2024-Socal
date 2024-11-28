@@ -6,9 +6,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BooleanSupplier;
 
 import org.json.simple.JSONObject;
@@ -44,6 +46,7 @@ import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.robot.FieldConstants;
 import frc.robot.RobotContainer;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.CatzRobotTracker;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain.DriveConstants;
@@ -64,31 +67,28 @@ import frc.robot.Utilities.VirtualSubsystem;
 
 public class CatzAutonomous extends VirtualSubsystem{
     private final int MAX_QUESTIONS = 5;
-    private static final AutoRoutine defaultRoutine =
-                new AutoRoutine("Do Nothing", List.of(), Commands.none());
+    private static final AutoProgram defaultRoutine =
+                new AutoProgram("Do Nothing", List.of(), Commands.none());
     private static final String AUTO_STRING = "Auto";
 
-    private static LoggedDashboardChooser<Command> autoPathChooser = new LoggedDashboardChooser<>("Choosen Auto Routine");
-    private final LoggedDashboardChooser<AutoRoutine> routineChooser = new LoggedDashboardChooser<>(AUTO_STRING + "/Routine");
+    private final LoggedDashboardChooser<AutoProgram> autoProgramChooser = new LoggedDashboardChooser<>(AUTO_STRING + "/Routine");
     private final List<StringPublisher> questionPublishers;
     private final List<SwitchableChooser> questionChoosers;
-    private RobotContainer m_container;
-    private boolean trajectoriesLoaded = false;
-    private JSONParser parser = new JSONParser();
 
-    private HashMap<String, Command> dashboardCmds = new HashMap<>();
-    private HashMap<String, Command> dashboardSelectors = new HashMap<>();
+    private boolean trajectoriesLoaded = false;
+    private HashMap<String, Command> pathplannerPaths = new HashMap<>();
+    private HashMap<String, Command> choreoPaths = new HashMap<>();
     private File choreoPathsDirectory = new File(Filesystem.getDeployDirectory(), "choreo");
     private File pathplannerPathsDirectory = new File(Filesystem.getDeployDirectory(), "pathplanner/paths");
-    private File autosDirectory = new File(Filesystem.getDeployDirectory(), "pathplanner/autos");
-    private String lastAutoName = null;
 
-    private AutoRoutine lastRoutine;
+    private AutoProgram lastRoutine;
     private List<AutoQuestionResponse> lastResponses;
+
+    private RobotContainer m_container;
 
     public CatzAutonomous(RobotContainer container) {
         this.m_container = container;
-        routineChooser.addDefaultOption(defaultRoutine.name(), defaultRoutine);
+        autoProgramChooser.addDefaultOption(defaultRoutine.name(), defaultRoutine);
         lastRoutine = defaultRoutine;
         lastResponses = List.of();
 
@@ -96,14 +96,14 @@ public class CatzAutonomous extends VirtualSubsystem{
         questionPublishers = new ArrayList<>();
         questionChoosers = new ArrayList<>();
         for (int i = 0; i < MAX_QUESTIONS; i++) {
-        var publisher =
-            NetworkTableInstance.getDefault()
-                .getStringTopic("/SmartDashboard/" + AUTO_STRING + "/Question #" + Integer.toString(i + 1))
-                .publish();
-        publisher.set("NA");
-        questionPublishers.add(publisher);
-        questionChoosers.add(
-            new SwitchableChooser(AUTO_STRING + "/Question #" + Integer.toString(i + 1) + " Chooser"));
+            var publisher =
+                NetworkTableInstance.getDefault()
+                    .getStringTopic("/SmartDashboard/" + AUTO_STRING + "/Question #" + Integer.toString(i + 1))
+                    .publish();
+            publisher.set("NA");
+            questionPublishers.add(publisher);
+            questionChoosers.add(
+                new SwitchableChooser(AUTO_STRING + "/Question #" + Integer.toString(i + 1) + " Chooser"));
         }
 
         // Path follwing setup
@@ -113,6 +113,15 @@ public class CatzAutonomous extends VirtualSubsystem{
             DriveConstants.driveConfig.driveBaseRadius(),   
             new ReplanningConfig()
         );
+
+        //------------------------------------------------------------------------------------------------------------
+        // Autonmous questionaire gui configurations
+        // ORDER MATTERS! Register named commands first, AutoBuilder second, Trajectories and add autos to dashboard last
+        //------------------------------------------------------------------------------------------------------------
+        NamedCommands.registerCommand("noteDetectIntakeToShooter", AutomatedSequenceCmds.noteDetectIntakeToShooter(container));
+        NamedCommands.registerCommand("autonSpeakerShoot", AutomatedSequenceCmds.autonSpeakerShoot(container));
+        NamedCommands.registerCommand("TestPrint", Commands.print("Bench"));
+
         BooleanSupplier shouldFlip = ()->AllianceFlipUtil.shouldFlipToRed();
         AutoBuilder.configureHolonomic(
             tracker::getEstimatedPose,
@@ -123,15 +132,7 @@ public class CatzAutonomous extends VirtualSubsystem{
             shouldFlip,
             container.getCatzDrivetrain()
         );
-        //------------------------------------------------------------------------------------------------------------
-        // Autonmous questionaire gui configurations
-        // ORDER MATTERS! Register named commands first, configure questionaire second, and add autos to dashboard last
-        //------------------------------------------------------------------------------------------------------------
-        //----------------------------------------------------------------------------------------
-        //  Named Command registration
-        //----------------------------------------------------------------------------------------
-        NamedCommands.registerCommand("Intake", AutomatedSequenceCmds.noteDetectIntakeToShooter(container));
-
+        
         //------------------------------------------------------------------------------------------------------------
         // Path Configuration
         //------------------------------------------------------------------------------------------------------------
@@ -139,78 +140,29 @@ public class CatzAutonomous extends VirtualSubsystem{
             //to get rid of the extensions trailing the path names
             String pathName = pathFile.getName().replaceFirst("[.][^.]+$", ""); 
             PathPlannerPath path = PathPlannerPath.fromChoreoTrajectory(pathName);
-            NamedCommands.registerCommand(pathName, new TrajectoryDriveCmd(path, container.getCatzDrivetrain()));
+            choreoPaths.put(pathName, new TrajectoryDriveCmd(path, container.getCatzDrivetrain()));
         }
+        NamedCommands.registerCommands(choreoPaths);
         for(File pathFile : pathplannerPathsDirectory.listFiles()){
             //to get rid of the extensions trailing the path names
             String pathName = pathFile.getName().replaceFirst("[.][^.]+$", ""); 
             PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
-            NamedCommands.registerCommand(pathName, new TrajectoryDriveCmd(path, container.getCatzDrivetrain()));
-
-            // Named Command registration
-            NamedCommands.registerCommand("noteDetectIntakeToShooter", AutomatedSequenceCmds.noteDetectIntakeToShooter(container));
-            NamedCommands.registerCommand("autonSpeakerShoot", AutomatedSequenceCmds.autonSpeakerShoot(container));
-
-            NamedCommands.registerCommand("TestPrint", Commands.print("Bench"));
-
+            pathplannerPaths.put(pathName, new TrajectoryDriveCmd(path, container.getCatzDrivetrain()));
         }
-
-
-    
-        // //---------------------------------------------------------------------------
-        // // Far side auto Path Configuration
-        // //---------------------------------------------------------------------------
-        // HashMap<String, Command> farSideScoringChoices = new HashMap<>();
-
-        // farSideScoringChoices.put("Bottom GP", NamedCommands.getCommand("CollectGP1"));
-        // farSideScoringChoices.put("1 Up GP", NamedCommands.getCommand("ColletGP2"));
-        // farSideScoringChoices.put("2 Up GP", NamedCommands.getCommand("ColletGP3"));
-        // farSideScoringChoices.put("Do Nothing", new PrintCommand("Skipped"));
-        // dashboardCmds.put("Score1FarSide", new DashboardCmd("Bottom or 1 up GP?", farSideScoringChoices));
-        // dashboardCmds.put("Score2FarSide", new DashboardCmd("Bottom or 1 up GP?", farSideScoringChoices));
-        // dashboardCmds.put("Score3FarSide", new DashboardCmd("Score 1 More?", farSideScoringChoices));
-
-        //---------------------------------------------------------------------------
-        // Speaker side auto Path Configuration
-        //---------------------------------------------------------------------------
-        HashMap<String, Command> speakerSidefinalChoices = new HashMap<>();
-        speakerSidefinalChoices.put("2 GP side", NamedCommands.getCommand("Wing Scoring 1"));
-        speakerSidefinalChoices.put("2 GP subwoofer", NamedCommands.getCommand("Wing Option Mid"));
-        speakerSidefinalChoices.put("3 GP side", NamedCommands.getCommand("Wing Option Mid"));
-        speakerSidefinalChoices.put("3 GP subwoofer", NamedCommands.getCommand("Wing Option Mid"));
-
-
-        dashboardCmds.put("Score1", speakerSideQuestionSort(speakerSidefinalChoices));
-
-
-        // //---------------------------------------------------------------------------
-        // //  Sping Auto Conifig
-        // //---------------------------------------------------------------------------
-        // HashMap<String, Command> moveOptions = new HashMap<>();
-        // moveOptions.put("Spin", NamedCommands.getCommand("TurnStraight"));
-        // moveOptions.put("Move", NamedCommands.getCommand("DriveStraight"));
-        // dashboardCmds.put("SpinOrMove", new DashboardCmd("Spin or Move?", moveOptions));
-
-        // //---------------------------------------
-        // HashMap<String, Command> pathOptions = new HashMap<>();
-        // pathOptions.put("CurveTurn", NamedCommands.getCommand("CurveTurn"));
-        // pathOptions.put("DriveStraight", NamedCommands.getCommand("DriveStraight"));
-        // dashboardCmds.put("CurveOrStraight", new DashboardCmd("Curve or Turn?", pathOptions));
-
-        dashboardCmds.forEach((k, v) -> {
-            NamedCommands.registerCommand(k, v);
-        });
+        NamedCommands.registerCommands(pathplannerPaths);
         
-        for (File autoFile: autosDirectory.listFiles()){
-            String autoName = autoFile.getName().replaceFirst("[.][^.]+$", "");
-            if(autoName.contains("Questionaire")) {
-                List<AutoQuestion> questions = determineAutoQuestions(autoName);
-                addRoutine(autoName, questions, new PathPlannerAuto(autoName));
-            } else {
-                addRoutine(autoName, new PathPlannerAuto(autoName));
-            }
-            autoPathChooser.addDefaultOption(autoName, new PathPlannerAuto(autoName));
-        }
+        addProgram("Speaker",  
+            List.of(
+                new AutoQuestion(
+                    "Starting location?",
+                    List.of(
+                        AutoQuestionResponse.AMP,
+                        AutoQuestionResponse.CENTER)),
+                new AutoQuestion(
+                    "How many spike notes?",
+                    List.of(AutoQuestionResponse.TWO, AutoQuestionResponse.THREE))), 
+            speakerSideAuto()
+        );
 
     }
 
@@ -221,88 +173,53 @@ public class CatzAutonomous extends VirtualSubsystem{
             return;
         }
         // Update the list of questions
-        var selectedRoutine = routineChooser.get();
+        var selectedRoutine = autoProgramChooser.get();
         if (selectedRoutine == null) {
             return;
         }
 
+        // Refresh Questionaire list when new Auto routine is selected
         if (!selectedRoutine.equals(lastRoutine)) {
-        var questions = selectedRoutine.questions();
-        for (int i = 0; i < MAX_QUESTIONS; i++) {
-            if (i < questions.size()) {
-            questionPublishers.get(i).set(questions.get(i).question());
-            questionChoosers
-                .get(i)
-                .setOptions(
-                    questions.get(i).responses().stream()
-                        .map((AutoQuestionResponse response) -> response.toString())
-                        .toArray(String[]::new));
-            } else {
-            questionPublishers.get(i).set("");
-            questionChoosers.get(i).setOptions(new String[] {});
+            List<AutoQuestion> questions = selectedRoutine.questions();
+            for (int i = 0; i < MAX_QUESTIONS; i++) {
+                if (i < questions.size()) {
+                    questionPublishers.get(i).set(questions.get(i).question());
+                    questionChoosers.get(i).setOptions(questions.get(i).responses().stream()
+                                .map((AutoQuestionResponse response) -> response.toString())
+                                .toArray(String[]::new)
+                    );
+                } else {
+                    questionPublishers.get(i).set("");
+                    questionChoosers.get(i).setOptions(new String[] {});
+                }
             }
         }
-        }
 
-        // Update the routine and responses
+        // Update the routine and responses periodically from user
         lastRoutine = selectedRoutine;
         lastResponses = new ArrayList<>();
         for (int i = 0; i < lastRoutine.questions().size(); i++) {
-        String responseString = questionChoosers.get(i).get();
-        lastResponses.add(
-            responseString == null
-                ? lastRoutine.questions().get(i).responses().get(0)
-                : AutoQuestionResponse.valueOf(responseString));
+            String responseString = questionChoosers.get(i).get();
+            lastResponses.add(
+                responseString == null
+                    ? lastRoutine.questions().get(i).responses().get(0)
+                    : AutoQuestionResponse.valueOf(responseString)
+            );
         }
 
-        // try {
-        //     // collect autoname for this iteration
-        //     String autoName = autoPathChooser.get().getName() + ".auto";
-        //     JSONObject json = (JSONObject) parser.parse(new FileReader(Filesystem.getDeployDirectory()+"/pathplanner/autos/" + autoName));
-
-        //     if (!autoName.equals(lastAutoName)){
-        //         lastAutoName = autoName;
-
-        //         // Determine question boxes
-        //         for(int i=1; i<=MAX_QUESTIONS; i++){
-        //             String questionName = "Question " + String.valueOf(i);
-        //             SmartDashboard.putString(questionName, "");
-        //             SmartDashboard.putData(questionName + " Response", new SendableChooser<Command>());
-        //         }
-
-        //         //Collect question boxes assiciated with auto
-        //         ArrayList<Object> commands = JSONUtil.getCommandsFromPath(json);
-        //         int questionCounter = 1;
-
-        //         // Fill question Boxes
-        //         for(Object o : commands){
-        //             String commandName = JSONUtil.getCommandName(o);
-        //             DashboardCmd modifiableCommand = dashboardCmds.get(commandName);
-                    
-        //             if(modifiableCommand != null){
-        //                 String questionName = "Question " + String.valueOf(questionCounter);
-        //                 SmartDashboard.putString(questionName, modifiableCommand.getQuestion());
-        //                 SmartDashboard.putData(questionName + " Response", modifiableCommand.getChooser());
-        //                 questionCounter += 1;
-        //             }
-        //         }
-        //     }
-        // } catch (Exception e) {
-        //     e.printStackTrace();
-        // }
     }
     //---------------------------------------------------------------------------------------------------------
     //
     //          Chooser helpers
     //
-        //---------------------------------------------------------------------------------------------------------
+    //---------------------------------------------------------------------------------------------------------
     /** Registers a new auto routine that can be selected. */
     private void addRoutine(String name, Command command) {
-        addRoutine(name, List.of(), command);
+        addProgram(name, List.of(), command);
     }
 
     /** Registers a new auto routine that can be selected. */
-    private void addRoutine(String name, List<AutoQuestion> questions, Command command) {
+    private void addProgram(String name, List<AutoQuestion> questions, Command command) {
         if (questions.size() > MAX_QUESTIONS) {
         throw new RuntimeException(
             "Auto routine contained more than "
@@ -310,33 +227,34 @@ public class CatzAutonomous extends VirtualSubsystem{
                 + " questions: "
                 + name);
         }
-        routineChooser.addOption(name, new AutoRoutine(name, questions, command));
+        autoProgramChooser.addOption(name, new AutoProgram(name, questions, command));
     }
 
-    public List<AutoQuestion> determineAutoQuestions(String autoName) {
-        List<AutoQuestion> autoQuestions = List.of();
-        if(autoName.contains("SpeakerSide")) {
-            autoQuestions = List.of(
-                new AutoQuestion(
-                    "Starting location?",
-                    List.of(
-                        AutoQuestionResponse.AMP,
-                        AutoQuestionResponse.CENTER)),
-                new AutoQuestion(
-                    "How many spike notes?",
-                    List.of(AutoQuestionResponse.TWO, AutoQuestionResponse.THREE)),
-                new AutoQuestion(
-                    "First center note?", List.of(AutoQuestionResponse.THINKING_ON_YOUR_FEET)),
-                new AutoQuestion(
-                    "Second center note?", List.of(AutoQuestionResponse.THINKING_ON_YOUR_FEET))
-            );
-        }
+    //---------------------------------------------------------------------------------------------------------
+    //
+    //          Autonomous Paths
+    //
+    //---------------------------------------------------------------------------------------------------------
+    public Command speakerSideAuto() {
+        HashMap<AutoQuestionResponse, Command> startingChoices = new HashMap<>();
+        startingChoices.put(AutoQuestionResponse.AMP, NamedCommands.getCommand("Wing Scoring 1"));
+        startingChoices.put(AutoQuestionResponse.CENTER, NamedCommands.getCommand("Wing Scoring 2"));
 
-        return autoQuestions;
-    }
 
-    public Command speakerSideQuestionSort(HashMap<String, Command> choices) {
-        return NamedCommands.getCommand("Wing Scoring 1");
+
+        return Commands.sequence(
+            Commands.select(
+                Map.of(
+                    AutoQuestionResponse.SOURCE,
+                    resetPose(FieldConstants.startingCenter),
+                    AutoQuestionResponse.CENTER,
+                    resetPose(FieldConstants.startingCenter),
+                    AutoQuestionResponse.AMP,
+                    resetPose(FieldConstants.startingAmp)
+                ),
+                () -> lastResponses.get(0) // Starting location
+            ),
+            Commands.select(startingChoices, () -> lastResponses.get(0)));
     }
 
 
@@ -387,9 +305,27 @@ public class CatzAutonomous extends VirtualSubsystem{
                 CatzRobotTracker.getInstance().getEstimatedPose().getRotation());
         }
     }
-    /** Getter for final autonomous routine */
+
+  /**
+   * Resets pose accounting for alliance color.
+   *
+   * @param pose Pose to reset to.
+   */
+  public static Command resetPose(Pose2d pose) {
+    return Commands.runOnce(
+        () -> {
+          CatzRobotTracker.getInstance().resetPose(AllianceFlipUtil.apply(pose));
+          CatzRobotTracker.getInstance().setTrajectorySetpoint(AllianceFlipUtil.apply(pose));
+        });
+  }
+
+
+
+
+
+    /** Getter for final autonomous Program */
     public Command getCommand() { 
-        return autoPathChooser.get();
+        return lastRoutine.command();
     }
 
 
@@ -399,7 +335,7 @@ public class CatzAutonomous extends VirtualSubsystem{
     //
     //---------------------------------------------------------------------------------------------------------
     /** A customizable auto routine associated with a single command. */
-    private static final record AutoRoutine(
+    private static final record AutoProgram(
         String name, List<AutoQuestion> questions, Command command) {}
 
     /** A question to ask for customizing an auto routine. */
