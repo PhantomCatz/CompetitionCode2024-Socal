@@ -14,6 +14,7 @@ import frc.robot.CatzSubsystems.Shooter.ShooterFlywheels.CatzShooterFlywheels;
 import frc.robot.CatzSubsystems.IntakeRollers.CatzIntakeRollers;
 import frc.robot.CatzSubsystems.SuperSubsystem.CatzSuperSubsystem;
 import frc.robot.CatzSubsystems.SuperSubsystem.CatzSuperSubsystem.SuperstructureState;
+import frc.robot.Utilities.NoteVisualizer;
 
 /** Place where any sequencing/nonPosition Based robot state logic is held */
 public class AutomatedSequenceCmds {
@@ -32,7 +33,7 @@ public class AutomatedSequenceCmds {
                 rollers.setRollersIn()
             ).until(() -> rollers.isNoteInIntake()), // Until Intake Rollers have detected note,
             transferNoteToShooter(container) //Stow is already called in method
-        );
+        ).withTimeout(0.3).alongWith(Commands.print("intake"));
     }
 
     /** 
@@ -140,7 +141,7 @@ public class AutomatedSequenceCmds {
                     Commands.runOnce(()->RobotContainer.updateLimelight = true)
                 )
             )
-        );
+        ).alongWith(Commands.print("Shot").alongWith(NoteVisualizer.shoot()));
     }
 
     public static Command   scoreSpeakerSubwoofer(RobotContainer container, Supplier<Boolean> driverOveride) {

@@ -1,16 +1,24 @@
 package frc.robot.Commands.DriveAndRobotOrientationCmds;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.littletonrobotics.junction.Logger;
 
+import com.pathplanner.lib.path.EventMarker;
 import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.PathPlannerTrajectory;
 import com.pathplanner.lib.path.PathPlannerTrajectory.State;
 
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -24,6 +32,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.CatzConstants;
 import frc.robot.Robot;
 import frc.robot.CatzConstants.AllianceColor;
@@ -50,6 +59,11 @@ public class TrajectoryDriveCmd extends Command {
     private boolean atTarget = false;
     public static double pathTimeOut = -999.0;
 
+    // Event Command variables
+    private final Map<Command, Boolean> currentEventCommands = new HashMap();
+    private final List<Pair<Double, Command>> untriggeredEvents = new ArrayList();
+    private boolean isEventCommandRunning = false;
+
 
     //Constructor Logger
     private int m_constructorLogger = 1; // For determining if the command is auto path find or autonomous
@@ -62,26 +76,20 @@ public class TrajectoryDriveCmd extends Command {
         path = newPath;
         m_driveTrain = drivetrain;
         addRequirements(m_driveTrain);
-    }
-    
 
-    //Auto Pathplanning trajectoreies
-    public TrajectoryDriveCmd(List<Translation2d> bezierPoints, 
-                              PathConstraints constraints, 
-                              GoalEndState endRobotState,
-                              CatzDrivetrain drivetrain,
-                              int constructorLogger) {
-        PathPlannerPath newPath = new PathPlannerPath(bezierPoints, constraints, endRobotState);
-        path = newPath;
-        m_driveTrain = drivetrain;
-        m_constructorLogger = constructorLogger;
-        addRequirements(m_driveTrain);
+        Iterator var10 = this.path.getEventMarkers().iterator();
+
+        while(var10.hasNext()) {
+            EventMarker marker = (EventMarker)var10.next();
+            Set<Subsystem> reqs = marker.getCommand().getRequirements();
+
+            this.m_requirements.addAll(reqs);
+        }
     }
+
 
     @Override
     public void initialize() {
-        timer.reset();
-        timer.start();        
         
         PathPlannerPath usePath = path;
         if(AllianceFlipUtil.shouldFlipToRed()) {
@@ -96,15 +104,19 @@ public class TrajectoryDriveCmd extends Command {
             tracker.getEstimatedPose().getRotation()
         );
 
-        tracker.resetPose(usePath.getPreviewStartingHolonomicPose());
         hocontroller = DriveConstants.getNewHolController();                                
         pathTimeOut = trajectory.getTotalTimeSeconds() * TIMEOUT_SCALAR; //TODO do we still need this
+
+        this.currentEventCommands.clear();
+        this.untriggeredEvents.clear();
+        this.untriggeredEvents.addAll(this.trajectory.getEventCommands());
+        this.timer.reset();
+        this.timer.start();
     }
 
     @Override
     public void execute() {
         double currentTime = this.timer.get();
-        tracker.setTrajectoryAmtCompleted(currentTime/trajectory.getTotalTimeSeconds());
 
         // Trajectory Executor
         if(!atTarget){
@@ -139,6 +151,38 @@ public class TrajectoryDriveCmd extends Command {
             m_driveTrain.stopDriving();
         }
 
+        
+        if (!this.untriggeredEvents.isEmpty() && this.timer.hasElapsed((Double)((Pair)this.untriggeredEvents.get(0)).getFirst())) {
+            Pair<Double, Command> event = (Pair)this.untriggeredEvents.remove(0);
+            Iterator var10 = this.currentEventCommands.entrySet().iterator();
+   
+            while(var10.hasNext()) {
+               Map.Entry<Command, Boolean> runningCommand = (Map.Entry)var10.next();
+               if ((Boolean)runningCommand.getValue() && !Collections.disjoint(((Command)runningCommand.getKey()).getRequirements(), ((Command)event.getSecond()).getRequirements())) {
+                  ((Command)runningCommand.getKey()).end(true);
+                  runningCommand.setValue(false);
+               }
+            }
+   
+            ((Command)event.getSecond()).initialize();
+            this.currentEventCommands.put((Command)event.getSecond(), true);
+            isEventCommandRunning = true;
+         }
+   
+         Iterator var13 = this.currentEventCommands.entrySet().iterator();
+   
+         while(var13.hasNext()) {
+            Map.Entry<Command, Boolean> runningCommand = (Map.Entry)var13.next();
+            if ((Boolean)runningCommand.getValue()) {
+               ((Command)runningCommand.getKey()).execute();
+               if (((Command)runningCommand.getKey()).isFinished()) {
+                  ((Command)runningCommand.getKey()).end(false);
+                  runningCommand.setValue(false);
+                  isEventCommandRunning = false;
+               }
+            }
+         }   
+
     }
 
     /*
@@ -159,7 +203,7 @@ public class TrajectoryDriveCmd extends Command {
     public void end(boolean interrupted) {
         timer.stop(); // Stop timer
         m_driveTrain.stopDriving();
-       // System.out.println("trajectory done");
+        System.out.println("trajectory done");
     }
 
     @Override
@@ -194,7 +238,7 @@ public class TrajectoryDriveCmd extends Command {
             (desiredMPS == 0 || currentMPS < ALLOWABLE_VEL_ERROR)
         );
 
-        return atTarget || timer.hasElapsed(pathTimeOut);
+        return atTarget || timer.hasElapsed(pathTimeOut) && !isEventCommandRunning;
     } 
 
 }

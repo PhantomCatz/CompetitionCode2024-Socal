@@ -42,6 +42,8 @@ import frc.robot.CatzSubsystems.LEDs.CatzLED;
 import frc.robot.Commands.ControllerModeAbstraction;
 import frc.robot.Utilities.Alert;
 import frc.robot.Utilities.AllianceFlipUtil;
+import frc.robot.Utilities.NoteVisualizer;
+import frc.robot.Utilities.VirtualSubsystem;
 import frc.robot.Utilities.Alert.AlertType;
 import lombok.Getter;
 
@@ -245,6 +247,7 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotPeriodic() {
+    VirtualSubsystem.periodicAll();
     CommandScheduler.getInstance().run();
 
     // Print auto duration
@@ -337,7 +340,6 @@ public class Robot extends LoggedRobot {
         }
       }
     }
-    m_robotContainer.getCatzAutonomous().updateQuestionaire();
     CatzRobotTracker.getInstance().getAutoAimSpeakerParemeters();
   }
   
@@ -370,11 +372,14 @@ public class Robot extends LoggedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
     }
+    NoteVisualizer.resetAutoNotes();
   }
 
   @Override
   public void autonomousPeriodic() {
     autoElapsedTime = Timer.getFPGATimestamp() - autoStart;
+    NoteVisualizer.showAutoNotes();
+
   }
 
   @Override
@@ -387,6 +392,8 @@ public class Robot extends LoggedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
+    NoteVisualizer.clearAutoNotes();
+    NoteVisualizer.showAutoNotes();
 
     teleStart = Timer.getFPGATimestamp();
   }
