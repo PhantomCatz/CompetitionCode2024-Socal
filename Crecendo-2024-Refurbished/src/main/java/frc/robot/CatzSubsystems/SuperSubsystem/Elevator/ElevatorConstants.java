@@ -27,12 +27,12 @@ public class ElevatorConstants {
     // Motor ID
     public static final int leaderID =
         switch (CatzConstants.getRobotType()) {
-            case SN2 -> 50;
+            case SN2, OVERTIME, ATLAS -> 50;
             default -> 11;
         };
     public static final double elevatorLength =
         switch (CatzConstants.getRobotType()) {
-            case SN2 -> Units.inchesToMeters(24.8);
+            case SN2, OVERTIME, ATLAS -> Units.inchesToMeters(24.8);
             default -> Units.inchesToMeters(25.866);
         };
 
@@ -45,13 +45,13 @@ public class ElevatorConstants {
     // Initial PIDF and motion magic assignment
     public static final Gains gains =
         switch (CatzConstants.getRobotType()) {
-            case SN2 -> new Gains(7.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0); //TODO fix gains
+            case SN2, OVERTIME, ATLAS -> new Gains(7.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0); //TODO fix gains
             case SN1 -> new Gains(75.0, 0.0, 2.5, 0.0, 0.0, 0.0, 0.0);
             case SN_TEST -> new Gains(7000.0, 0.0, 250.0, 8.4, 0.2, 0.2, 22.9);
         };
     public static final MotionMagicParameters motionMagicParameters =
         switch (CatzConstants.getRobotType()) {
-            case SN2, SN1 -> new MotionMagicParameters(400, 800, 1600);
+            case SN2, SN1, OVERTIME, ATLAS -> new MotionMagicParameters(400, 800, 1600);
             case SN_TEST -> new MotionMagicParameters(0.0, 0.0, 0.0);
         };
 

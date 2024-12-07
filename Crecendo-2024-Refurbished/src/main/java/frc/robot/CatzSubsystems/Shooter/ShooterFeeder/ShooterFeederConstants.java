@@ -10,14 +10,14 @@ public class ShooterFeederConstants {
     // Motor ID Assignment
     public static final int FEEDER_ID = 
         switch(CatzConstants.getRobotType()) {
-            case SN2 -> 23;
+            case SN2, OVERTIME, ATLAS -> 23;
             case SN1 -> 23;
             case SN_TEST -> 24;
         };
     
     public static final Gains gains = 
         switch (CatzConstants.getRobotType()) {
-            case SN2 ->     new Gains(0.18, 0, 0.0006, 0.38367, 0.00108, 0.0, 0.0);
+            case SN2, OVERTIME, ATLAS ->     new Gains(0.18, 0, 0.0006, 0.38367, 0.00108, 0.0, 0.0);
             case SN1 ->     new Gains(0.0003, 0.0, 0.0, 0.33329, 0.00083, 0.0, 0.0 );
             case SN_TEST -> new Gains(0.05, 0.0, 0.0, 0.01, 0.00103, 0.0, 0.0);
         };

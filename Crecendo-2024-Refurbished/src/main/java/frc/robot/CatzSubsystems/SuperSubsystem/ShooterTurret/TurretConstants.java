@@ -9,7 +9,7 @@ public class TurretConstants {
 
     public static final int TURRET_MOTOR_ID = 
         switch(CatzConstants.getRobotType()) {
-            case SN2 -> 60;
+            case SN2, OVERTIME, ATLAS -> 60;
             case SN1 -> 3;
             case SN_TEST -> 4;
         };

@@ -28,7 +28,7 @@ public class DriveConstants {
 
     public static final DriveConfig driveConfig =
     switch (CatzConstants.getRobotType()) {
-      case SN_TEST, SN2 ->
+      case SN_TEST, SN2, OVERTIME, ATLAS ->
           DriveConfig.builder()
               .wheelRadius(Units.inchesToMeters(2))
               .robotLengthX(Units.inchesToMeters(24.0))
@@ -77,6 +77,28 @@ public class DriveConstants {
                     0.005,
                     Mk4iReductions.L2_PLUS.reduction,
                     Mk4iReductions.steer.reduction);
+            case OVERTIME -> 
+                new ModuleGainsAndRatios(
+                    5.5,
+                    0.6,
+                    0.0,
+                    0.2,//1.2, //TODO fix to account for non foc
+                    0.0,
+                    0.7,
+                    0.005,
+                    Mk4iReductions.L2_PLUS.reduction,
+                    Mk4iReductions.steer.reduction);
+            case ATLAS -> 
+                new ModuleGainsAndRatios(
+                    5.5,
+                    0.6,
+                    0.0,
+                    0.2,//1.2, //TODO fix to account for non foc
+                    0.0,
+                    0.7,
+                    0.005,
+                    Mk4iReductions.L2_PLUS.reduction,
+                    Mk4iReductions.steer.reduction);
             case SN_TEST ->
                 new ModuleGainsAndRatios(
                     0.014,
@@ -95,6 +117,7 @@ public class DriveConstants {
             case SN_TEST -> 50.0;
             case SN1 -> 100.0;
             case SN2 -> 250.0;
+            case OVERTIME, ATLAS -> 250.0;
         };
 
     // Logged Tunable PIDF values for swerve modules
@@ -113,6 +136,20 @@ public class DriveConstants {
                     new ModuleConfig(3, 4, 8, 4.6208462275/Math.PI/2+0.5),
                     new ModuleConfig(5, 6, 7, 0.6691969510/Math.PI/2),
                     new ModuleConfig(7, 8, 6, 2.0568857418/Math.PI/2)
+                };
+            case OVERTIME->
+                new ModuleConfig[] {
+                    new ModuleConfig(1, 2, 9, 4.886472605463549/Math.PI/2+0.5),
+                    new ModuleConfig(3, 4, 8, 5.265674472124703/Math.PI/2+0.5),
+                    new ModuleConfig(5, 6, 7, 5.741181549830015/Math.PI/2),
+                    new ModuleConfig(7, 8, 6, 0.09332195458572974/Math.PI/2+0.5)
+                };
+            case ATLAS->
+                new ModuleConfig[] {
+                    new ModuleConfig(1, 2, 9, 0.04597186892707224/Math.PI/2+0.5),
+                    new ModuleConfig(3, 8, 8, 3.432492909390978/Math.PI/2+0.5),
+                    new ModuleConfig(5, 6, 7, 1.631828716390434/Math.PI/2+0.5),
+                    new ModuleConfig(7, 4, 6, 0.19892345268353454/Math.PI/2)
                 };
             case SN1 ->
                 new ModuleConfig[] {

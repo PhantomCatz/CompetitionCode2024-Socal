@@ -22,8 +22,9 @@ public final class CatzConstants {
   //--------------------------------------------------/
   public static final RobotSenario robotSenario = RobotSenario.TUNING;
   public static final RobotHardwareMode hardwareMode = RobotHardwareMode.REAL;
-  private static RobotID robotType = RobotID.SN2;
-  
+  private static RobotID robotType = RobotID.ATLAS;
+
+
   public static final double LOOP_TIME = 0.02;
 
 
@@ -52,7 +53,9 @@ public final class CatzConstants {
   public static enum RobotID {
     SN1,
     SN2,
-    SN_TEST // Select alternate test robot parameters
+    SN_TEST, // Select alternate test robot parameters
+    OVERTIME, 
+    ATLAS
   }
 
   public static enum AllianceColor {

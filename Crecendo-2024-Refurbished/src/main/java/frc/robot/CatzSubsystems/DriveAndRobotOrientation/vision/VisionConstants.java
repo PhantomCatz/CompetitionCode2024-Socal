@@ -65,7 +65,7 @@ public class VisionConstants {
 
   public static final double[] stdDevFactors =
       switch (CatzConstants.getRobotType()) {
-        case SN2 -> new double[] {1.0, 0.6, 1.0};
+        case SN2, OVERTIME, ATLAS -> new double[] {1.0, 0.6, 1.0};
         case SN1 -> new double[] {1.0, 1.0};
         default -> new double[] {};
       };
