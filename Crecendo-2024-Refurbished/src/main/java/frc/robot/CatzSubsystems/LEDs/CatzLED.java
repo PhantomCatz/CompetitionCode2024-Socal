@@ -63,15 +63,15 @@ public class CatzLED extends SubsystemBase {
     private final Notifier loadingNotifier;
 
     // LED PWM IDs
-    private final int LEADER_LED_PWM_PORT = 2; 
+    private final int LEADER_LED_PWM_PORT = 1;  // OT 2 // Atlas // 
     private final int LED_COUNT_HALF = 5; //TODO what does this mean
 
 
     // Constants
     private static final boolean paradeLeds = false;
     private static final int minLoopCycleCount = 10;
-    private static final int length = 34;
-    private static final double strobeDuration = 0.1;
+    private static final int length = 50;
+    private static final double strobeDuration = 1.5;
     private static final double breathDuration = 1.0;
     private static final double rainbowCycleLength = 25.0;
     private static final double rainbowDuration = 0.25;
@@ -138,54 +138,8 @@ public class CatzLED extends SubsystemBase {
         //-----------------------------------------------------------
         // Set LED mode
         //----------------------------------------------------------
-        solid(Color.kBlack); // Default to off
-        if (estopped) {
-            solid(Color.kRed);
-        // MODE DISABLED
-        } else if (DriverStation.isDisabled()) {
-            if (lastEnabledAuto && Timer.getFPGATimestamp() - lastEnabledTime < autoFadeMaxTime) {
-                // Auto fade
-                solid(1.0 - ((Timer.getFPGATimestamp() - lastEnabledTime) / autoFadeTime), Color.kGreen);
-            } else if (lowBatteryAlert) {
-                // Low battery
-                solid(Color.kOrangeRed);
-            } else if (paradeLeds) {
-                // TODO add parade led pattern
-            } else {
-                // Default pattern
-                wave(allianceColor, secondaryDisabledColor, waveAllianceCycleLength, waveAllianceDuration);
-            }
+        wave(Color.kRed, Color.kYellow, waveAllianceCycleLength, waveAllianceDuration); // OT strobe //atlas
 
-            // Same battery alert //TODO add battery alert
-            if (sameBattery) {
-                breath(Color.kRed, Color.kBlack);
-            }
-
-        // MODE AUTON
-        } else if (DriverStation.isAutonomous()) {
-            wave(Color.kGold, Color.kDarkBlue, waveFastCycleLength, waveFastDuration);
-            if (autoFinished) {
-                double fullTime = (double) length / waveFastCycleLength * waveFastDuration;
-                solid((Timer.getFPGATimestamp() - autoFinishedTime) / fullTime, Color.kGreen);
-            }
-        // MODE ENABLED
-        } else { 
-            wave(CatzColorConstants.PHANTOM_SAPPHIRE, Color.kWhite, waveAllianceCycleLength, waveAllianceDuration);
-
-            if (trapping || isClimbing || autoDrive || isAutoShootSpeaker) {
-                rainbow(rainbowCycleLength, rainbowDuration);
-            } else if(isHoarding) {
-                wave(Color.kBlack, Color.kPurple, waveAllianceCycleLength, waveAllianceDuration);
-            } else if (hasNoteSpeaker) {
-                solid(Color.kGreen);
-            } else if (hasNoteAmp) {
-                solid(Color.kOrange);
-            }
-
-            if (endgameAlert) {
-                strobe(Color.kRed, Color.kGold, strobeDuration);
-            }
-        }
 
         // Update LEDs
         ledStrip.setData(buffer);
