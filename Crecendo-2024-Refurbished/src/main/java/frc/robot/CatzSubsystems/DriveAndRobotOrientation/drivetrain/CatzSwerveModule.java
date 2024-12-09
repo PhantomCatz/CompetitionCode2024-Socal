@@ -166,7 +166,7 @@ public class CatzSwerveModule {
         io.setDriveNeutralModeIO(type);
     }
 
-    public void setNeutralModeSteer(IdleMode type) {
+    public void setNeutralModeSteer(NeutralModeValue type) {
         io.setSteerNeutralModeIO(type);
     }
 
@@ -224,7 +224,7 @@ public class CatzSwerveModule {
     }
 
     public double getRawEnc(){
-        return inputs.steerAbsoluteEncPosition.getRotations();
+        return inputs.rawAbsoluteEncPosition.getRotations();
     }
 
     /** Outputs the Rotation object of the module */

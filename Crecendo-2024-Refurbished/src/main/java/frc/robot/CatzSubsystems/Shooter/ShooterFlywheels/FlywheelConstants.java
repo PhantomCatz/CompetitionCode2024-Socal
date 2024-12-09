@@ -7,7 +7,7 @@ import frc.robot.Utilities.MotorUtil.Gains;
 public class FlywheelConstants {
 
     // Subsystem safety disable
-    public final static boolean isShooterFlywheelsDisabled = false;
+    public final static boolean isShooterFlywheelsDisabled = true;
 
     // motor id and misc qualities
     public static final FlywheelConfig flywheelConfig =

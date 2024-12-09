@@ -116,10 +116,10 @@ public class DriveConstants {
                 };
             case SN1 ->
                 new ModuleConfig[] {
-                    new ModuleConfig(1, 2, 9, 0.2134),
-                    new ModuleConfig(3, 4, 8, 0.7446),
-                    new ModuleConfig(5, 6, 7, 0.7983),
-                    new ModuleConfig(7, 8, 6, 0.0070)
+                    new ModuleConfig(1, 2, 2, 0.2134),
+                    new ModuleConfig(3, 4, 1, 0.7446),
+                    new ModuleConfig(5, 6, 3, 0.7983),
+                    new ModuleConfig(7, 8, 4, 0.0070)
                 };
             case SN_TEST -> 
                 new ModuleConfig[] {

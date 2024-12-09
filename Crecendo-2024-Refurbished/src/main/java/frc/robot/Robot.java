@@ -38,6 +38,7 @@ import frc.robot.CatzConstants.RobotHardwareMode;
 import frc.robot.CatzConstants.RobotID;
 import frc.robot.CatzConstants.RobotSenario;
 import frc.robot.CatzSubsystems.DriveAndRobotOrientation.CatzRobotTracker;
+import frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain.MT6835;
 import frc.robot.CatzSubsystems.LEDs.CatzLED;
 import frc.robot.Commands.ControllerModeAbstraction;
 import frc.robot.Utilities.Alert;
@@ -77,6 +78,7 @@ public class Robot extends LoggedRobot {
   // Can Error Detection variables
   private static final double canErrorTimeThreshold = 0.5; // Seconds to disable alert
   private static final double canivoreErrorTimeThreshold = 0.5;
+  private int testPrintCounter =0;
 
   // Battery Logging Variables
   private static final String batteryNameFile = "/home/lvuser/battery-name.txt";
@@ -90,6 +92,15 @@ public class Robot extends LoggedRobot {
           .subscribe(defaultBatteryName);
   private boolean batteryNameChecked = false;
   private boolean batteryNameWritten = false;
+
+  //------------------------------------
+  //
+  // Sensor testing
+  //
+  //--------------------------------------------
+  private MT6835 sensor1;
+  private MT6835 sensor2;
+  
 
   //--------------------------------------------------------------------------------------------------------
   //
@@ -202,6 +213,11 @@ public class Robot extends LoggedRobot {
               logCommandFunction.accept(command, false);
             });
 
+    //encoder id, debug mode
+    sensor1 = new MT6835(4, false); // Debug mode enabled
+    sensor2 = new MT6835(3, false); // Debug mode enabled
+
+
     // Reset alert timers
     canInitialErrorTimer.restart();
     canErrorTimer.restart();
@@ -300,47 +316,8 @@ public class Robot extends LoggedRobot {
     }
     garbageCollectionCounter++;
 
-    // Update battery logging
-    String batteryName = batteryNameSubscriber.get();
-    Logger.recordOutput("BatteryName", batteryName);
-    if (CatzConstants.hardwareMode == CatzConstants.RobotHardwareMode.REAL && !batteryName.equals(defaultBatteryName)) {
-      // Check for battery alert
-      if (!batteryNameChecked) {
-        batteryNameChecked = true;
-        File file = new File(batteryNameFile);
-        if (file.exists()) {
-          // Read previous battery name
-          String previousBatteryName = "";
-          try {
-            previousBatteryName =
-                new String(Files.readAllBytes(Paths.get(batteryNameFile)), StandardCharsets.UTF_8);
-          } catch (IOException e) {
-            e.printStackTrace();
-          }
-          if (previousBatteryName.equals(batteryName)) {
-            // Same battery, set alert
-            sameBatteryAlert.set(true);
-            CatzLED.getInstance().sameBattery = true;
-          } else {
-            // New battery, delete file
-            file.delete();
-          }
-        }
-      }
-
-      // Write battery name if in Competition Mode
-      if (!batteryNameWritten && CatzConstants.robotSenario == RobotSenario.COMPETITION) {
-        batteryNameWritten = true;
-        try {
-          FileWriter fileWriter = new FileWriter(batteryNameFile);
-          fileWriter.write(batteryName);
-          fileWriter.close();
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
-      }
-    }
     CatzRobotTracker.getInstance().getAutoAimSpeakerParemeters();
+    testPrintCounter++;
   }
   
   @Override
@@ -418,4 +395,31 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void testExit() {}
+
+  // public void sendCustomCANMessage() {
+  //   // Data payload to send (maximum 8 bytes)
+  //   byte[] data = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+
+  //   try {
+  //     // Send a single CAN packet
+  //     canDevice.writePacket(data, API_ID);
+  //     System.out.println("CAN Packet Sent: API_ID=" + API_ID + ", Data=" + bytesToHex(data));
+  //   } catch (Exception e) {
+  //     System.err.println("Failed to send CAN Packet: " + e.getMessage());
+  //   }
+  // }
+
+  /**
+   * Helper function to convert a byte array to a hexadecimal string.
+   *
+   * @param bytes The byte array to convert.
+   * @return A string representation of the byte array in hexadecimal format.
+   */
+  private String bytesToHex(byte[] bytes) {
+    StringBuilder sb = new StringBuilder();
+    for (byte b : bytes) {
+      sb.append(String.format("%02X ", b));
+    }
+    return sb.toString().trim();
+  }
 }
