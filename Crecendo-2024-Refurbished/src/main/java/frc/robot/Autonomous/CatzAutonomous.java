@@ -67,11 +67,11 @@ import frc.robot.Utilities.VirtualSubsystem;
 
 public class CatzAutonomous extends VirtualSubsystem{
     private final int MAX_QUESTIONS = 5;
-    private static final AutoProgram defaultRoutine =
-                new AutoProgram("Do Nothing", List.of(), Commands.none());
+    private static final DashboardAutoProgram defaultRoutine =
+                new DashboardAutoProgram("Do Nothing", List.of(), Commands.none());
     private static final String AUTO_STRING = "Auto";
 
-    private final LoggedDashboardChooser<AutoProgram> autoProgramChooser = new LoggedDashboardChooser<>(AUTO_STRING + "/Routine");
+    private final LoggedDashboardChooser<DashboardAutoProgram> autoProgramChooser = new LoggedDashboardChooser<>(AUTO_STRING + "/Program");
     private final List<StringPublisher> questionPublishers;
     private final List<SwitchableChooser> questionChoosers;
 
@@ -81,15 +81,23 @@ public class CatzAutonomous extends VirtualSubsystem{
     private File choreoPathsDirectory = new File(Filesystem.getDeployDirectory(), "choreo");
     private File pathplannerPathsDirectory = new File(Filesystem.getDeployDirectory(), "pathplanner/paths");
 
-    private AutoProgram lastRoutine;
+    private DashboardAutoProgram lastProgram;
     private List<AutoQuestionResponse> lastResponses;
+    private JSONParser parser = new JSONParser();
+
+    //---------------------------------------------------------------------------------------------------
+    //  Auto Questions
+    //-----------------------------------------------------------------------------------------------------
+    private HashMap<String, AutoQuestion> autoQuestions = new HashMap<>();
+
+
 
     private RobotContainer m_container;
 
     public CatzAutonomous(RobotContainer container) {
         this.m_container = container;
         autoProgramChooser.addDefaultOption(defaultRoutine.name(), defaultRoutine);
-        lastRoutine = defaultRoutine;
+        lastProgram = defaultRoutine;
         lastResponses = List.of();
 
         // Publish questions and choosers
@@ -122,6 +130,7 @@ public class CatzAutonomous extends VirtualSubsystem{
         NamedCommands.registerCommand("autonSpeakerShoot", AutomatedSequenceCmds.autonSpeakerShoot(container));
         NamedCommands.registerCommand("TestPrint", Commands.print("Bench"));
 
+
         BooleanSupplier shouldFlip = ()->AllianceFlipUtil.shouldFlipToRed();
         AutoBuilder.configureHolonomic(
             tracker::getEstimatedPose,
@@ -150,8 +159,20 @@ public class CatzAutonomous extends VirtualSubsystem{
             pathplannerPaths.put(pathName, new TrajectoryDriveCmd(path, container.getCatzDrivetrain()));
         }
         NamedCommands.registerCommands(pathplannerPaths);
-        
-        addProgram("Speaker",  
+
+        autoQuestions.put("twoOrThreeGamePieces", new AutoQuestion(
+                                                        "Starting location?",
+                                                        List.of(
+                                                            AutoQuestionResponse.AMP,
+                                                            AutoQuestionResponse.CENTER)));
+        HashMap<AutoQuestionResponse, Command> startingChoices = new HashMap<>();
+        startingChoices.put(AutoQuestionResponse.AMP, NamedCommands.getCommand("Wing Scoring 1"));
+        startingChoices.put(AutoQuestionResponse.CENTER, NamedCommands.getCommand("Wing Scoring 2"));
+        NamedCommands.registerCommand("twoOrThreeGamePieces", Commands.select(startingChoices, () -> lastResponses.get(0)));
+
+
+
+        addProgram("SpeakerSide",  
             List.of(
                 new AutoQuestion(
                     "Starting location?",
@@ -161,7 +182,7 @@ public class CatzAutonomous extends VirtualSubsystem{
                 new AutoQuestion(
                     "How many spike notes?",
                     List.of(AutoQuestionResponse.TWO, AutoQuestionResponse.THREE))), 
-            speakerSideAuto()
+            AutoBuilder.buildAuto("SpeakerSide")
         );
 
     }
@@ -169,43 +190,90 @@ public class CatzAutonomous extends VirtualSubsystem{
     @Override
     public void periodic() {
         // Skip updates when actively running in auto
-        if (DriverStation.isAutonomousEnabled() && lastRoutine != null && lastResponses == null) {
+        if (DriverStation.isAutonomousEnabled() && lastProgram != null && lastResponses == null) {
             return;
         }
         // Update the list of questions
-        var selectedRoutine = autoProgramChooser.get();
-        if (selectedRoutine == null) {
+        var selectedProgram = autoProgramChooser.get();
+        if (selectedProgram == null) {
             return;
         }
 
-        // Refresh Questionaire list when new Auto routine is selected
-        if (!selectedRoutine.equals(lastRoutine)) {
-            List<AutoQuestion> questions = selectedRoutine.questions();
-            for (int i = 0; i < MAX_QUESTIONS; i++) {
-                if (i < questions.size()) {
-                    questionPublishers.get(i).set(questions.get(i).question());
-                    questionChoosers.get(i).setOptions(questions.get(i).responses().stream()
-                                .map((AutoQuestionResponse response) -> response.toString())
-                                .toArray(String[]::new)
-                    );
-                } else {
+        try {
+            String autoName = autoProgramChooser.get().name + ".auto";
+            JSONObject json = (JSONObject) parser.parse(new FileReader(Filesystem.getDeployDirectory()+"/pathplanner/autos/" + autoName));
+            // Refresh Questionaire list when new Auto routine is selected
+            if (!selectedProgram.equals(lastProgram)) {
+                // Set Up Question Boxes
+                for(int i = 0; i < MAX_QUESTIONS; i++) {
                     questionPublishers.get(i).set("");
                     questionChoosers.get(i).setOptions(new String[] {});
                 }
-            }
+
+                // List all auton commands in Json
+                ArrayList<Object> commands = JSONUtil.getCommandsFromPath(json);
+                int questionCounter = 0;
+
+                // Fill Queston Boxes
+                for(Object o : commands){
+                    String commandName = JSONUtil.getCommandName(o);
+                    AutoQuestion chooserAutoQuestion = autoQuestions.get(commandName);
+
+                    if(chooserAutoQuestion != null) {
+                        String questionName = "Question " + String.valueOf(questionCounter);
+                        questionPublishers.get(questionCounter).set(chooserAutoQuestion.question());
+                        questionChoosers.get(questionCounter).setOptions(chooserAutoQuestion.responses().stream()
+                                                             .map((AutoQuestionResponse response) -> response.toString())
+                                                             .toArray(String[]::new));
+                        System.out.println("Hi");
+                        questionCounter += 1;
+                    }
+                }
+            }   
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         // Update the routine and responses periodically from user
-        lastRoutine = selectedRoutine;
+        lastProgram = selectedProgram;
         lastResponses = new ArrayList<>();
-        for (int i = 0; i < lastRoutine.questions().size(); i++) {
+        for (int i = 0; i < lastProgram.questions().size(); i++) {
             String responseString = questionChoosers.get(i).get();
             lastResponses.add(
                 responseString == null
-                    ? lastRoutine.questions().get(i).responses().get(0)
+                    ? lastProgram.questions().get(i).responses().get(0)
                     : AutoQuestionResponse.valueOf(responseString)
             );
         }
+
+        // // Refresh Questionaire list when new Auto routine is selected
+        // if (!selectedRoutine.equals(lastProgram)) {
+        //     List<AutoQuestion> questions = selectedRoutine.questions();
+        //     for (int i = 0; i < MAX_QUESTIONS; i++) {
+        //         if (i < questions.size()) {
+        //             questionPublishers.get(i).set(questions.get(i).question());
+        //             questionChoosers.get(i).setOptions(questions.get(i).responses().stream()
+        //                         .map((AutoQuestionResponse response) -> response.toString())
+        //                         .toArray(String[]::new)
+        //             );
+        //         } else {
+        //             questionPublishers.get(i).set("");
+        //             questionChoosers.get(i).setOptions(new String[] {});
+        //         }
+        //     }
+        // }
+
+        // // Update the routine and responses periodically from user
+        // lastProgram = selectedRoutine;
+        // lastResponses = new ArrayList<>();
+        // for (int i = 0; i < lastProgram.questions().size(); i++) {
+        //     String responseString = questionChoosers.get(i).get();
+        //     lastResponses.add(
+        //         responseString == null
+        //             ? lastProgram.questions().get(i).responses().get(0)
+        //             : AutoQuestionResponse.valueOf(responseString)
+        //     );
+        // }
 
     }
     //---------------------------------------------------------------------------------------------------------
@@ -214,48 +282,48 @@ public class CatzAutonomous extends VirtualSubsystem{
     //
     //---------------------------------------------------------------------------------------------------------
     /** Registers a new auto routine that can be selected. */
-    private void addRoutine(String name, Command command) {
+    private void addProgram(String name, Command command) {
         addProgram(name, List.of(), command);
     }
 
     /** Registers a new auto routine that can be selected. */
     private void addProgram(String name, List<AutoQuestion> questions, Command command) {
         if (questions.size() > MAX_QUESTIONS) {
-        throw new RuntimeException(
-            "Auto routine contained more than "
-                + Integer.toString(MAX_QUESTIONS)
-                + " questions: "
-                + name);
+            throw new RuntimeException(
+                "Auto routine contained more than "
+                    + Integer.toString(MAX_QUESTIONS)
+                    + " questions: "
+                    + name);
         }
-        autoProgramChooser.addOption(name, new AutoProgram(name, questions, command));
+        autoProgramChooser.addOption(name, new DashboardAutoProgram(name, questions, command));
     }
 
-    //---------------------------------------------------------------------------------------------------------
-    //
-    //          Autonomous Paths
-    //
-    //---------------------------------------------------------------------------------------------------------
-    public Command speakerSideAuto() {
-        HashMap<AutoQuestionResponse, Command> startingChoices = new HashMap<>();
-        startingChoices.put(AutoQuestionResponse.AMP, NamedCommands.getCommand("Wing Scoring 1"));
-        startingChoices.put(AutoQuestionResponse.CENTER, NamedCommands.getCommand("Wing Scoring 2"));
+    // //---------------------------------------------------------------------------------------------------------
+    // //
+    // //          Autonomous Paths
+    // //
+    // //---------------------------------------------------------------------------------------------------------
+    // public Command speakerSideAuto() {
+    //     HashMap<AutoQuestionResponse, Command> startingChoices = new HashMap<>();
+    //     startingChoices.put(AutoQuestionResponse.AMP, NamedCommands.getCommand("Wing Scoring 1"));
+    //     startingChoices.put(AutoQuestionResponse.CENTER, NamedCommands.getCommand("Wing Scoring 2"));
 
 
 
-        return Commands.sequence(
-            Commands.select(
-                Map.of(
-                    AutoQuestionResponse.SOURCE,
-                    resetPose(FieldConstants.startingCenter),
-                    AutoQuestionResponse.CENTER,
-                    resetPose(FieldConstants.startingCenter),
-                    AutoQuestionResponse.AMP,
-                    resetPose(FieldConstants.startingAmp)
-                ),
-                () -> lastResponses.get(0) // Starting location
-            ),
-            Commands.select(startingChoices, () -> lastResponses.get(0)));
-    }
+    //     return Commands.sequence(
+    //         Commands.select(
+    //             Map.of(
+    //                 AutoQuestionResponse.SOURCE,
+    //                 resetPose(FieldConstants.startingCenter),
+    //                 AutoQuestionResponse.CENTER,
+    //                 resetPose(FieldConstants.startingCenter),
+    //                 AutoQuestionResponse.AMP,
+    //                 resetPose(FieldConstants.startingAmp)
+    //             ),
+    //             () -> lastResponses.get(0) // Starting location
+    //         ),
+    //         Commands.select(startingChoices, () -> lastResponses.get(0)));
+    // }
 
 
 
@@ -325,7 +393,7 @@ public class CatzAutonomous extends VirtualSubsystem{
 
     /** Getter for final autonomous Program */
     public Command getCommand() { 
-        return lastRoutine.command();
+        return lastProgram.command();
     }
 
 
@@ -335,7 +403,7 @@ public class CatzAutonomous extends VirtualSubsystem{
     //
     //---------------------------------------------------------------------------------------------------------
     /** A customizable auto routine associated with a single command. */
-    private static final record AutoProgram(
+    private static final record DashboardAutoProgram(
         String name, List<AutoQuestion> questions, Command command) {}
 
     /** A question to ask for customizing an auto routine. */

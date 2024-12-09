@@ -3,6 +3,7 @@
     "types": {
       "/AdvantageKit/RealOutputs/ShooterPivot/pivot": "Mechanism2d",
       "/FMSInfo": "FMSInfo",
+      "/SmartDashboard/Auto/Program": "String Chooser",
       "/SmartDashboard/Auto/Question #1 Chooser": "String Chooser",
       "/SmartDashboard/Auto/Question #2 Chooser": "String Chooser",
       "/SmartDashboard/Auto/Question #3 Chooser": "String Chooser",
