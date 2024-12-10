@@ -299,7 +299,7 @@ public class CatzDrivetrain extends SubsystemBase {
     }
 
     /**  Set coast mode for all swerve modules */
-    public void setSteerNeutralMode(IdleMode type) {
+    public void setSteerNeutralMode(NeutralModeValue type) {
         for (CatzSwerveModule module : m_swerveModules) {
             module.setNeutralModeSteer(type);
         }

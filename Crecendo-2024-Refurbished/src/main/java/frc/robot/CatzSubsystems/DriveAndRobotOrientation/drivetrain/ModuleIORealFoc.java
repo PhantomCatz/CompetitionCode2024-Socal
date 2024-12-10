@@ -28,14 +28,15 @@ import frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain.DriveConstan
 
 import static frc.robot.CatzSubsystems.DriveAndRobotOrientation.drivetrain.DriveConstants.*;
 
+import javax.swing.text.Position;
+
 import org.littletonrobotics.junction.Logger;
 
 public class ModuleIORealFoc implements ModuleIO {
   // Hardware
   private final TalonFX driveTalon;
-  private final CANSparkMax steerSparkMax;
-  private final DutyCycleEncoder steerAbsoluteMagEnc;
-  private final DigitalInput magEncPWMInput;
+  private final TalonFX steerTalon;
+  private final MT6835 absEncoder;
   private final Rotation2d absoluteEncoderOffset;
 
   // Status Signals
@@ -45,15 +46,23 @@ public class ModuleIORealFoc implements ModuleIO {
   private final StatusSignal<Double> driveSupplyCurrent;
   private final StatusSignal<Double> driveTorqueCurrent;
 
-  // drive Controller Configs
+  private final StatusSignal<Double> steerPosition;
+  private final StatusSignal<Double> steerVelocity;
+  private final StatusSignal<Double> steerAppliedVolts;
+  private final StatusSignal<Double> steerSupplyCurrent;
+  private final StatusSignal<Double> steerTorqueCurrent;
+
+  // Motor Configs
   private final TalonFXConfiguration driveTalonConfig = new TalonFXConfiguration();
+  private final TalonFXConfiguration steerTalonConfig = new TalonFXConfiguration();
 
   // Control
   private final VoltageOut voltageControl = new VoltageOut(0).withUpdateFreqHz(0);
+  private final DutyCycleOut dutyCycleOutControl = new DutyCycleOut(0).withUpdateFreqHz(0);
   private final TorqueCurrentFOC currentControl = new TorqueCurrentFOC(0).withUpdateFreqHz(0);
   private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC = new VelocityTorqueCurrentFOC(0).withUpdateFreqHz(0);
   private final VelocityVoltage velocityVoltage = new VelocityVoltage(0).withUpdateFreqHz(0);
-  private final PositionTorqueCurrentFOC positionControl = new PositionTorqueCurrentFOC(0).withUpdateFreqHz(0);
+  private final PositionDutyCycle positionControl = new PositionDutyCycle(0).withUpdateFreqHz(0);
   private final NeutralOut neutralControl = new NeutralOut().withUpdateFreqHz(0);
   private final PIDController steerFeedback = new PIDController(moduleGainsAndRatios.steerkP(), 0.0, moduleGainsAndRatios.steerkD());
 
@@ -81,33 +90,12 @@ public class ModuleIORealFoc implements ModuleIO {
     driveTalonConfig.Slot0.kS = moduleGainsAndRatios.driveFFkS();
     driveTalonConfig.Slot0.kV = moduleGainsAndRatios.driveFFkV();
 
-    //check if drive motor is initialized correctly
-    for(int i=0;i<5;i++){
-      initializationStatus = driveTalon.getConfigurator().apply(driveTalonConfig);
-      if(!initializationStatus.isOK())
-          System.out.println("Failed to Configure CAN ID" + config.driveID());
-    }
-
-
-    // Init Steer controllers and steer encoder from config constants
-    magEncPWMInput = new DigitalInput(config.absoluteEncoderChannel());
-    steerAbsoluteMagEnc = new DutyCycleEncoder(magEncPWMInput);
-    absoluteEncoderOffset = Rotation2d.fromRotations(config.absoluteEncoderOffset());
-    steerSparkMax = new CANSparkMax(config.steerID(), MotorType.kBrushless);
-    steerSparkMax.enableVoltageCompensation(12.0);
-    steerSparkMax.setSecondaryCurrentLimit(12);
-    steerSparkMax.burnFlash();
-
-    steerFeedback.enableContinuousInput(-Math.PI, Math.PI);
-
     // Assign 100hz Signals
     drivePosition = driveTalon.getPosition();
     driveVelocity = driveTalon.getVelocity();
     driveAppliedVolts = driveTalon.getMotorVoltage();
     driveSupplyCurrent = driveTalon.getSupplyCurrent();
     driveTorqueCurrent = driveTalon.getTorqueCurrent();
-
-
 
     // Set Update Frequency
     BaseStatusSignal.setUpdateFrequencyForAll(
@@ -120,20 +108,75 @@ public class ModuleIORealFoc implements ModuleIO {
 
     // Optimize bus utilization
     driveTalon.optimizeBusUtilization(0, 1.0);
+
+    // Init steer controllers from config constants
+    steerTalon = new TalonFX(config.steerID());
+    absoluteEncoderOffset = Rotation2d.fromRotations(config.absoluteEncoderOffset());
+    absEncoder = new MT6835(config.absoluteEncoderChannel(), false);
+
+    // Restore Factory Defaults
+    steerTalon.getConfigurator().apply(new TalonFXConfiguration());
+
+    // Config Motors Current Limits assume FOC is included with motors
+    steerTalonConfig.TorqueCurrent.PeakForwardTorqueCurrent = 40.0; 
+    steerTalonConfig.TorqueCurrent.PeakReverseTorqueCurrent = -40.0;
+    steerTalonConfig.ClosedLoopRamps.TorqueClosedLoopRampPeriod = 0.02;
+
+    steerTalonConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast; //Change back to break
+
+    // Gain Setting
+    steerTalonConfig.Slot0.kP = moduleGainsAndRatios.steerkP();
+    steerTalonConfig.Slot0.kD = moduleGainsAndRatios.steerkD();
+
+    // Assign 100hz Signals
+    steerPosition = steerTalon.getPosition();
+    steerVelocity = steerTalon.getVelocity();
+    steerAppliedVolts = steerTalon.getMotorVoltage();
+    steerSupplyCurrent = steerTalon.getSupplyCurrent();
+    steerTorqueCurrent = steerTalon.getTorqueCurrent();
+
+    // Set Update Frequency
+    BaseStatusSignal.setUpdateFrequencyForAll(
+        100.0,
+        steerVelocity,
+        steerAppliedVolts,
+        steerSupplyCurrent,
+        steerTorqueCurrent
+    );
+
+    steerTalon.optimizeBusUtilization(0, 1.0);
+
+
+    //check if motors are initialized correctly
+    for(int i=0;i<5;i++){
+      initializationStatus = driveTalon.getConfigurator().apply(driveTalonConfig);
+      if(!initializationStatus.isOK())
+          System.out.println("Failed to Configure CAN ID" + config.driveID());
+
+      initializationStatus = steerTalon.getConfigurator().apply(steerTalonConfig);
+      if(!initializationStatus.isOK())
+          System.out.println("Failed to Configure CAN ID" + config.steerID());
+    }
   }
 
   @Override
   public void updateInputs(ModuleIOInputs inputs) {
-
     // Refresh Drive Kraken status signals
-    inputs.isDriveMotorConnected =
-        BaseStatusSignal.refreshAll(
-                drivePosition,
-                driveVelocity,
-                driveAppliedVolts,
-                driveSupplyCurrent,
-                driveTorqueCurrent)
-            .isOK();
+    inputs.isDriveMotorConnected = BaseStatusSignal.refreshAll(
+      drivePosition,
+      driveVelocity,
+      driveAppliedVolts,
+      driveSupplyCurrent,
+      driveTorqueCurrent)
+    .isOK();
+
+    inputs.isSteerMotorConnected = BaseStatusSignal.refreshAll(
+      steerPosition,
+      steerVelocity,
+      steerAppliedVolts,
+      steerSupplyCurrent,
+      steerTorqueCurrent)
+    .isOK();
 
     //Drive Input variable refresh
     inputs.drivePositionUnits     = drivePosition.getValueAsDouble();
@@ -143,13 +186,12 @@ public class ModuleIORealFoc implements ModuleIO {
     inputs.driveTorqueCurrentAmps = driveTorqueCurrent.getValueAsDouble();
 
     // Refresh steer Motor Values
-    inputs.isSteerMotorConnected   = true;
-    inputs.steerAbsoluteEncPosition = Rotation2d.fromRotations(steerAbsoluteMagEnc.getAbsolutePosition());
-    inputs.steerAbsolutePosition   = Rotation2d.fromRotations(steerAbsoluteMagEnc.getAbsolutePosition() - absoluteEncoderOffset.getRotations());
-    inputs.steerPosition           = Rotation2d.fromRotations(steerSparkMax.getEncoder().getPosition());
-    inputs.steerVelocityRadsPerSec = Units.rotationsToRadians(steerSparkMax.getEncoder().getVelocity());
-    inputs.steerBusVoltage         = steerSparkMax.getBusVoltage();
-
+    inputs.rawAbsoluteEncPosition = Rotation2d.fromRadians(absEncoder.update(absEncoder.readAngle(0)));
+    inputs.rawAbsEncValueDouble  = absEncoder.update(absEncoder.readAngle(0));
+    inputs.steerAbsolutePosition   = Rotation2d.fromRadians(absEncoder.update(absEncoder.readAngle(0)) - absoluteEncoderOffset.getRotations());
+    inputs.steerVelocityRadsPerSec = Units.rotationsToRadians(steerVelocity.getValueAsDouble());
+    inputs.steerSupplyCurrentAmps = steerSupplyCurrent.getValueAsDouble();
+    inputs.steerTorqueCurrentAmps = steerTorqueCurrent.getValueAsDouble();
 
     inputs.odometryDrivePositionsMeters = new double[] {drivePosition.getValueAsDouble() * driveConfig.wheelRadius()};
     inputs.odometrySteerPositions = new Rotation2d[] {inputs.steerAbsolutePosition};
@@ -160,7 +202,7 @@ public class ModuleIORealFoc implements ModuleIO {
   }
 
   public void runSteerVolts(double volts) {
-    steerSparkMax.setVoltage(volts);
+    steerTalon.setVoltage(volts);
   }
 
   @Override
@@ -170,23 +212,20 @@ public class ModuleIORealFoc implements ModuleIO {
 
   @Override
   public void runDriveVelocityRPSIO(double velocityMetersPerSec) {
-    driveTalon.setControl(velocityTorqueCurrentFOC.withVelocity(velocityMetersPerSec));
+    driveTalon.setControl(velocityVoltage.withVelocity(velocityMetersPerSec));
   }
 
   public void runSteerPercentOutput(double percentOutput) {
-    steerSparkMax.set(percentOutput);
+    steerTalon.set(percentOutput);
   }
 
   @Override
   public void runSteerPositionSetpoint(double currentAngleRads, double targetAngleRads) {
-      //calculate steer pwr
-      //negative steer power because of coordinate system 
-    double percentOutput = -steerFeedback.calculate(currentAngleRads, targetAngleRads); // Right in terms of the coordinate system was not right in terms of the motor
-    runSteerPercentOutput(percentOutput);
+		steerTalon.setControl(dutyCycleOutControl.withOutput(steerFeedback.calculate(currentAngleRads, targetAngleRads)));
 
-     Logger.recordOutput("Module " + m_config.driveID() + "/steer volts", percentOutput);
-     Logger.recordOutput("Module " + m_config.driveID() + "/steer current Angle", currentAngleRads);
-     Logger.recordOutput("Module " + m_config.driveID() + "/steer Target Angle", targetAngleRads);
+    Logger.recordOutput("Module " + m_config.driveID() + "/steer Target Angle", targetAngleRads);
+    Logger.recordOutput("Module " + m_config.driveID() + "/steer current Angle", currentAngleRads);
+
   }
 
   @Override
@@ -209,8 +248,8 @@ public class ModuleIORealFoc implements ModuleIO {
   }
 
   @Override
-  public void setSteerNeutralModeIO(IdleMode type) {
-      steerSparkMax.setIdleMode(type);
+  public void setSteerNeutralModeIO(NeutralModeValue type) {
+    steerTalonConfig.MotorOutput.NeutralMode = type;
+    steerTalon.getConfigurator().apply(steerTalonConfig);
   }
-
 }

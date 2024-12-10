@@ -13,7 +13,7 @@ import frc.robot.Utilities.MotorUtil.MotionMagicParameters;
 public class IntakePivotConstants {
 
     // Subsystem safety disable
-    public final static boolean isIntakePivotDisabled = false;
+    public final static boolean isIntakePivotDisabled = true;
 
     // Gearbox Definitions
     private static final double INTAKE_PIVOT_DRIVEN_GEAR = 52.0;

@@ -5,7 +5,7 @@ import frc.robot.CatzConstants;
 public class TurretConstants {
     
     // Subsystem Safety Disable
-    public static boolean isShooterTurretDisabled = false;
+    public static boolean isShooterTurretDisabled = true;
 
     public static final int TURRET_MOTOR_ID = 
         switch(CatzConstants.getRobotType()) {

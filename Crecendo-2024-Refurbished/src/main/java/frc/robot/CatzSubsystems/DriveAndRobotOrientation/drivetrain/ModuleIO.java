@@ -23,15 +23,13 @@ public interface ModuleIO {
    public double steerAbsoluteInitPosition;
    public Rotation2d steerPosition = new Rotation2d();
    public double steerVelocityRadsPerSec;
-   public Rotation2d steerAbsoluteEncPosition = new Rotation2d();
+   public Rotation2d rawAbsoluteEncPosition = new Rotation2d();
+   public double rawAbsEncValueDouble;
    public Rotation2d steerAbsolutePosition = new Rotation2d();
    public double steerTorqueCurrentAmps;
-   public double steerBusVoltage;
    public double steerSupplyCurrentAmps;
    public double[] odometryDrivePositionsMeters = new double[0];
    public Rotation2d[] odometrySteerPositions = new Rotation2d[0];
-
-
  }
 
  /** Updates the set of loggable inputs. */
@@ -59,9 +57,9 @@ public interface ModuleIO {
  //---------------------------------------------------------------------------
  public default void runSteerPercentOutput(double steerPwr) {}
 
- public default void runSteerPositionSetpoint(double currentAngleRad, double currentAngleRads) {}
+ public default void runSteerPositionSetpoint(double currentAngleRads, double targetAngleRads) {}
 
- public default void setSteerNeutralModeIO(IdleMode type) {}
+ public default void setSteerNeutralModeIO(NeutralModeValue type) {}
 
  public default void setSteerSimPwrIO(double volts) {}
 

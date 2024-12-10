@@ -99,7 +99,7 @@ public class CatzSwerveModule {
     public void debugLogsSwerve(){
         Logger.recordOutput("Module " + m_moduleName + "/drive recorded fps", Units.metersToFeet(Conversions.RPSToMPS(inputs.driveVelocityRPS)));
         Logger.recordOutput("Module " + m_moduleName + "/drive target fps", Units.metersToFeet(m_swerveModuleState.speedMetersPerSecond));
-        Logger.recordOutput("Module " + m_moduleName + "/current state", getModuleState());
+        Logger.recordOutput("Module " + m_moduleName + "/currentmodule state", m_swerveModuleState.angle.getRadians());
         Logger.recordOutput("Module " + m_moduleName + "/angle error deg", Math.toDegrees(m_swerveModuleState.angle.getRadians()-getAbsEncRadians()));
         Logger.recordOutput("Module " + m_moduleName + "/currentmoduleangle rad", getAbsEncRadians());
         //Logger.recordOutput("Module " + m_moduleName + "/targetmoduleangle rad", m_swerveModuleState.angle.getRadians());
@@ -166,7 +166,7 @@ public class CatzSwerveModule {
         io.setDriveNeutralModeIO(type);
     }
 
-    public void setNeutralModeSteer(IdleMode type) {
+    public void setNeutralModeSteer(NeutralModeValue type) {
         io.setSteerNeutralModeIO(type);
     }
 
@@ -224,7 +224,7 @@ public class CatzSwerveModule {
     }
 
     public double getRawEnc(){
-        return inputs.steerAbsoluteEncPosition.getRotations();
+        return inputs.rawAbsoluteEncPosition.getRotations();
     }
 
     /** Outputs the Rotation object of the module */

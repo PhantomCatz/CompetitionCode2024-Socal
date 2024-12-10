@@ -5,7 +5,7 @@ import frc.robot.Utilities.MotorUtil.Gains;
 
 public class ShooterFeederConstants {
     // Subsystem Safety Disable
-    public static final boolean isShooterDisabledFeeder = false;
+    public static final boolean isShooterDisabledFeeder = true;
 
     // Motor ID Assignment
     public static final int FEEDER_ID = 
