@@ -58,6 +58,7 @@ public class ModuleIORealFoc implements ModuleIO {
 
   // Control
   private final VoltageOut voltageControl = new VoltageOut(0).withUpdateFreqHz(0);
+  private final DutyCycleOut dutyCycleOutControl = new DutyCycleOut(0).withUpdateFreqHz(0);
   private final TorqueCurrentFOC currentControl = new TorqueCurrentFOC(0).withUpdateFreqHz(0);
   private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC = new VelocityTorqueCurrentFOC(0).withUpdateFreqHz(0);
   private final VelocityVoltage velocityVoltage = new VelocityVoltage(0).withUpdateFreqHz(0);
@@ -121,8 +122,7 @@ public class ModuleIORealFoc implements ModuleIO {
     steerTalonConfig.TorqueCurrent.PeakReverseTorqueCurrent = -40.0;
     steerTalonConfig.ClosedLoopRamps.TorqueClosedLoopRampPeriod = 0.02;
 
-    steerTalonConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    steerTalonConfig.ClosedLoopGeneral.ContinuousWrap = true;
+    steerTalonConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast; //Change back to break
 
     // Gain Setting
     steerTalonConfig.Slot0.kP = moduleGainsAndRatios.steerkP();
@@ -186,8 +186,9 @@ public class ModuleIORealFoc implements ModuleIO {
     inputs.driveTorqueCurrentAmps = driveTorqueCurrent.getValueAsDouble();
 
     // Refresh steer Motor Values
-    inputs.rawAbsoluteEncPosition = Rotation2d.fromRotations(absEncoder.readAngle(0));
-    inputs.steerAbsolutePosition   = Rotation2d.fromRotations(absEncoder.readAngle(0) - absoluteEncoderOffset.getRotations());
+    inputs.rawAbsoluteEncPosition = Rotation2d.fromRadians(absEncoder.update(absEncoder.readAngle(0)));
+    inputs.rawAbsEncValueDouble  = absEncoder.update(absEncoder.readAngle(0));
+    inputs.steerAbsolutePosition   = Rotation2d.fromRadians(absEncoder.update(absEncoder.readAngle(0)) - absoluteEncoderOffset.getRotations());
     inputs.steerVelocityRadsPerSec = Units.rotationsToRadians(steerVelocity.getValueAsDouble());
     inputs.steerSupplyCurrentAmps = steerSupplyCurrent.getValueAsDouble();
     inputs.steerTorqueCurrentAmps = steerTorqueCurrent.getValueAsDouble();
@@ -220,7 +221,7 @@ public class ModuleIORealFoc implements ModuleIO {
 
   @Override
   public void runSteerPositionSetpoint(double currentAngleRads, double targetAngleRads) {
-		steerTalon.setControl(voltageControl.withOutput(steerFeedback.calculate(currentAngleRads, targetAngleRads)));
+		steerTalon.setControl(dutyCycleOutControl.withOutput(steerFeedback.calculate(currentAngleRads, targetAngleRads)));
 
     Logger.recordOutput("Module " + m_config.driveID() + "/steer Target Angle", targetAngleRads);
     Logger.recordOutput("Module " + m_config.driveID() + "/steer current Angle", currentAngleRads);

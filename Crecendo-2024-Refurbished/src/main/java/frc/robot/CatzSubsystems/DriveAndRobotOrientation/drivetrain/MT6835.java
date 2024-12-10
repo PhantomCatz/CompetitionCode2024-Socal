@@ -8,12 +8,16 @@ public class MT6835 {
     private CANData canData;
     private final int deviceID;
     private final boolean debugMode;
+    private double lastValue;
+    private int rotationCount;
 
     public MT6835(int deviceID, boolean debugMode) {
         this.deviceID = deviceID;
         this.debugMode = debugMode;
         this.canDevice = new CAN(deviceID, 8, 10);
         this.canData = new CANData();
+        this.lastValue = 0.0;
+        this.rotationCount = 0;
     }
 
     /**
@@ -50,6 +54,30 @@ public class MT6835 {
             }
         }
         return -1; // Return -1 to indicate an error
+    }
+
+    /**
+     * Updates the encoder's cumulative value based on the current reading.
+     * 
+     * @param currentValue The Latest encoder value (0 to 1).
+     * @return The cumulative encoder value.
+     */
+    public double update(double currentValue) {
+        // Calculate the difference
+        double delta = currentValue - lastValue;
+
+        // Handle Rollovers
+        if(delta > 0.5) { //Rollover in the Negative Direction
+            rotationCount--;
+        } else if(delta < -0.5) { // Rollover in the positive Direction
+            rotationCount++;
+        }
+
+        // Update the last value
+        lastValue = currentValue;
+
+        // Compute the cumulative value
+        return rotationCount + currentValue;
     }
 
     /**
