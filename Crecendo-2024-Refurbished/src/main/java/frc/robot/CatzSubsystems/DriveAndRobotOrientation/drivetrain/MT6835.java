@@ -26,7 +26,7 @@ public class MT6835 {
      * @param apiID The API ID to use for reading.
      * @return A double representing the angle between 0 and 1, or -1 if no valid packet is received.
      */
-    public double readAngle(int apiID) {
+    public double readPositionRollover(int apiID) {
         if (canDevice.readPacketLatest(apiID, canData)) {
             byte[] receivedData = canData.data;
 
@@ -56,13 +56,15 @@ public class MT6835 {
         return -1; // Return -1 to indicate an error
     }
 
+    
+
     /**
      * Updates the encoder's cumulative value based on the current reading.
      * 
      * @param currentValue The Latest encoder value (0 to 1).
      * @return The cumulative encoder value.
      */
-    public double update(double currentValue) {
+    public double applyCountUp(double currentValue) {
         // Calculate the difference
         double delta = currentValue - lastValue;
 
