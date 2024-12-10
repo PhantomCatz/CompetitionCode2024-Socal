@@ -8,6 +8,7 @@ public class MT6835 {
     private CANData canData;
     private final int deviceID;
     private final boolean debugMode;
+    private final int apiID = 0;
     private double lastValue;
     private int rotationCount;
 
@@ -23,10 +24,9 @@ public class MT6835 {
     /**
      * Reads the latest packet from the CAN device and returns the angle as a normalized value.
      *
-     * @param apiID The API ID to use for reading.
      * @return A double representing the angle between 0 and 1, or -1 if no valid packet is received.
      */
-    public double readPositionRollover(int apiID) {
+    public double readPositionRollover() {
         if (canDevice.readPacketLatest(apiID, canData)) {
             byte[] receivedData = canData.data;
 
@@ -56,7 +56,14 @@ public class MT6835 {
         return -1; // Return -1 to indicate an error
     }
 
-    
+    /**
+     * Reads the latest packet from the CAN device and returns the angle as a normalized value.
+     *
+     * @return A double representing the encoder value in the -1 to 1 scale
+     */
+    public double readAbsolutePosition() {
+        return applyCountUp(readPositionRollover());
+    }
 
     /**
      * Updates the encoder's cumulative value based on the current reading.
