@@ -21,15 +21,20 @@ public interface ModuleIO {
    
    public boolean isSteerMotorConnected;
    public double steerAbsoluteInitPosition;
-   public Rotation2d steerPosition = new Rotation2d();
-   public double steerVelocityRadsPerSec;
-   public Rotation2d rawAbsoluteEncPosition = new Rotation2d();
-   public double rawAbsEncValueDouble;
-   public Rotation2d steerAbsolutePosition = new Rotation2d();
+
+   public Rotation2d rawAbsEncPosition = new Rotation2d();
+   public double     rawAbsEncValueRotation;
+   public Rotation2d steerAbsPosition = new Rotation2d();
+
    public double steerTorqueCurrentAmps;
    public double steerSupplyCurrentAmps;
    public double[] odometryDrivePositionsMeters = new double[0];
    public Rotation2d[] odometrySteerPositions = new Rotation2d[0];
+
+   // Simulation Inputs
+   public Rotation2d steerPosition = new Rotation2d();
+   public double steerVelocityRadsPerSec;
+
  }
 
  /** Updates the set of loggable inputs. */

@@ -38,6 +38,8 @@ public class CatzSwerveModule {
     private final Alert driveMotorDisconnected;
     private final Alert steerMotorDisconnected;
 
+
+
     //----------------------------------------------------------------------------------------------
     //
     //  CatzServeModule() - Constructor
@@ -73,8 +75,9 @@ public class CatzSwerveModule {
 
         resetDriveEncs();
 
-
     } // -End of CatzSwerveModule Constructor
+
+
 
     public void periodic() {
         // Process and Log Module Inputs
@@ -91,8 +94,8 @@ public class CatzSwerveModule {
         driveMotorDisconnected.set(!inputs.isDriveMotorConnected);
         steerMotorDisconnected.set(!inputs.isSteerMotorConnected);
 
-        // Logging
         debugLogsSwerve();
+
     } // -End of CatzSwerveModule Periodic 
 
 
@@ -106,7 +109,6 @@ public class CatzSwerveModule {
 
 
         //SmartDashboard.putNumber("absencposrad" + m_moduleName, inputs.steerAbsoluteEncPosition.getRadians());
-        SmartDashboard.putNumber("rawEncoderRevs" + m_moduleName, getRawEnc());
         SmartDashboard.putNumber("angle" + m_moduleName , getCurrentRotation().getDegrees());
 
 
@@ -119,14 +121,14 @@ public class CatzSwerveModule {
      */
     public void setModuleAngleAndVelocity(SwerveModuleState state) {
         //--------------------------------------------------------
-        //colllect variabels used in calculations
+        // Collect variabels used in calculations
         //--------------------------------------------------------
         this.m_swerveModuleState        = state;
         double targetAngleRads          = state.angle.getRadians();
         double currentAngleRads         = getAbsEncRadians();
 
         Logger.recordOutput("Module/TargetMPS", state.speedMetersPerSecond);
-        
+    
         //--------------------------------------------------------
         // Run closed loop drive control
         //--------------------------------------------------------
@@ -211,7 +213,7 @@ public class CatzSwerveModule {
 
     /** Get steer angle of module as {@link Rotation2d}. */
     public Rotation2d getAngle() {
-        return inputs.steerAbsolutePosition;
+        return inputs.steerAbsPosition;
     }
 
     /** Get velocity of drive wheel for characterization */
@@ -223,10 +225,6 @@ public class CatzSwerveModule {
         return inputs.driveVelocityRPS;
     }
 
-    public double getRawEnc(){
-        return inputs.rawAbsoluteEncPosition.getRotations();
-    }
-
     /** Outputs the Rotation object of the module */
     public Rotation2d getCurrentRotation() {
         return new Rotation2d(getAbsEncRadians());
@@ -234,6 +232,6 @@ public class CatzSwerveModule {
     
     private double getAbsEncRadians() {
         //mag enc value should already have offset applied
-        return inputs.steerAbsolutePosition.getRadians();
+        return inputs.steerAbsPosition.getRadians();
     }
 }

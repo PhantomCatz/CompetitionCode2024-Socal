@@ -50,7 +50,7 @@ public class ModuleIOSim implements ModuleIO {
     inputs.driveAppliedVolts = driveAppliedVolts;
     inputs.driveSupplyCurrentAmps = Math.abs(driveSim.getCurrentDrawAmps());
 
-    inputs.steerAbsolutePosition = new Rotation2d(steerSim.getAngularPositionRad()).plus(steerAbsoluteInitPosition);
+    inputs.steerAbsPosition = new Rotation2d(steerSim.getAngularPositionRad()).plus(steerAbsoluteInitPosition);
     inputs.steerPosition = Rotation2d.fromRadians(steerSim.getAngularPositionRad());
     inputs.steerVelocityRadsPerSec = steerSim.getAngularVelocityRadPerSec();
     inputs.steerSupplyCurrentAmps = steerAppliedVolts;

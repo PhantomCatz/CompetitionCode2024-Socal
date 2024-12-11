@@ -62,7 +62,7 @@ public class DriveConstants {
                     1.0 / DCMotor.getKrakenX60Foc(1).KtNMPerAmp, // A/(N*m)
                     0.2,
                     0.0,
-                    4.0,
+                    0.7,
                     0.005, 
                     Mk4iReductions.L2_PLUS.reduction,
                     Mk4iReductions.steer.reduction);
@@ -73,8 +73,8 @@ public class DriveConstants {
                     0.0,
                     1.2,//1.2, //TODO fix to account for non foc
                     0.0,
-                    0.7,
-                    0.005,
+                    0.001,
+                    0.000,
                     Mk4iReductions.L2_PLUS.reduction,
                     Mk4iReductions.steer.reduction);
             case SN_TEST ->
